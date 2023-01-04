@@ -85,7 +85,7 @@ while (E_m > Emin)
 
     %% Optimization
     cvx_begin
-        variable S(2,n)
+        variable S(2,Nm)
         variable x(n)
         variable y(n)
         variable V(n)
@@ -96,63 +96,83 @@ while (E_m > Emin)
 
         %% Calculation of the CRB
         factor_CRB = (P*G_p*beta_0)/(a*sigma_0^2);
-
-        x_km = 
-        x_km_last =
-        x_km = 
-        x_km_last =
-
-        x_last_diff = (x_km - x_km_last);
-        y_last_diff = (y_km - y_km_last);
-
-        d_s_km = sqrt(H^2 + x_last_diff^2 + y_last_diff^2);
         
-        x_t_est = 
-        y_t_est = 
+        x_last = ...
+        y_last = ...
+
+        x_t_est = ...
+        y_t_est = ...
         
-        d_s_vec = sqrt(H^2 + x_last_diff.^2 + y_last_diff.^2);
+        sumKm_hover = ...
+        pos_old_hover = ...
+
+        x_t_est_diff_old = pos_old_hover(1,:) - ones(1, sumKm_hover) * x_t_est;
+        y_t_est_diff_old = pos_old_hover(2,:) - ones(1, sumKm_hover) * y_t_est;
+
+        d_s_vec_old = sqrt(H^2 + x_t_est_diff_old.^2 + y_t_est_diff_old.^2);
         
-        x_diff_vec = S(1, :) - x_t_est;
-        y_diff_vec = S(2, :) - y_t_est;
+        sum_theta_a = sum(factor_CRB * x_t_est_diff_old.^2 ./ (d_s_vec_old.^6) + 8 * x_t_est_diff_old.^2 ./ (d_s_vec_old.^6) );
+        sum_theta_b = sum(factor_CRB * y_t_est_diff_old.^2 ./ (d_s_vec_old.^6) + 8 * y_t_est_diff_old.^2 ./ (d_s_vec_old.^6) );
+        sum_theta_c = sum(factor_CRB * x_t_est_diff_old.*y_t_est_diff_old ./ (d_s_vec_old.^6) + 8 * x_t_est_diff_old.*y_t_est_diff_old ./ (d_s_vec_old.^6));
 
-        sum_theta_a = sum_theta_a + sum(factor_CRB * x_diff_vec.^2 ./ (d_s_vec.^6) + 8 * x_diff_vec.^2 ./ (d_s_vec.^6) );
-        sum_theta_b = sum_theta_b + sum(factor_CRB * y_diff_vec.^2 ./ (d_s_vec.^6) + 8 * y_diff_vec.^2 ./ (d_s_vec.^6) );
-        sum_theta_c = sum_theta_c + sum(factor_CRB * x_diff_vec.*y_diff_vec ./ (d_s_vec.^6) + 8 * x_diff_vec.*y_diff_vec ./ (d_s_vec.^6));
+        x_t_est_diff = (x_last - x_t_est);
+        y_t_est_diff = (y_last - x_t_est);
 
-        theta_a = sum_theta_a;
-        theta_b = sum_theta_b;
-        theta_c = sum_theta_c;
-
-        CRB_denominator = theta_a * theta_b - theta_c^2;
-
-        derivate_theta_a_part1 = (2* x_last_diff * d_s_km - 6 * x_last_diff^2 * x_last_diff^3)/(d_s_km^8);
-        derivate_theta_a_part2 = (2* x_last_diff * d_s_km - 4 * x_last_diff^2 * x_last_diff^3)/(d_s_km^6);
-
-        derivate_theta_a = factor_CRB * derivate_theta_a_part1 + 8 * derivate_theta_a_part2;
-
-        derivate_theta_b = factor_CRB * y_last_diff^2 * (6 * x_last_diff)/(d_s_km^8);
-        derivate_theta_b = derivate_theta_b + 8 * y_last_diff^2 * (4 * x_last_diff)/(d_s_km^6);
-
-        derivate_theta_c = factor_CRB * y_last_diff * (d_s_km^2 - 6 * x_last_diff^2)/(d_s_km^8);
-        derivate_theta_c = derivate_theta_c + 8 * y_last_diff * (d_s_km^2 - 4 * x_last_diff^2)/(d_s_km^6);
+        d_s_km = sqrt(H^2 + x_t_est_diff.^2 + y_t_est_diff.^2);
         
-        derivate_CRB_denominator = derivate_theta_a * theta_b + theta_a * diff_theta_b - 2 * diff_theta_c;
+        theta_a = sum_theta_a + sum(factor_CRB * x_t_est_diff.^2 ./ (d_s_km.^6) + 8 * x_t_est_diff.^2 ./ (d_s_km.^6) );
+        theta_b = sum_theta_b + sum(factor_CRB * x_t_est_diff.^2 ./ (d_s_km.^6) + 8 * y_t_est_diff.^2 ./ (d_s_km.^6) );
+        theta_c = sum_theta_c + sum(factor_CRB * x_t_est_diff.*y_t_est_diff ./ (d_s_km.^6) + 8 * x_t_est_diff.*y_t_est_diff ./ (d_s_km.^6));
 
-        derivate_CRB_part1 = (derivate_theta_a * CRB_denominator - theta_a * derivate_CRB_denominator)/(CRB_denominator^2);
-        derivate_CRB_part2 = (diff_theta_b * CRB_denominator - theta_b * derivate_CRB_denominator)/(CRB_denominator^2);
+        CRB_denominator = theta_a .* theta_b - theta_c.^2; % vectorized
 
-        CRB_derivate_x_km = derivate_CRB_part1 + derivate_CRB_part2;
+        %% Derivative with respect to x
+        derivatex_theta_a_part1 = (2* x_t_est_diff .* d_s_km.^2 - 6  * x_t_est_diff.^3)/(d_s_km.^8); % vectorized
+        derivatex_theta_a_part2 = (2* x_t_est_diff .* d_s_km.^2 - 4  * x_t_est_diff.^3)/(d_s_km.^6); % vectorized
+
+        derivatex_theta_a = factor_CRB * derivatex_theta_a_part1 + 8 * derivatex_theta_a_part2;
+
+        derivatex_theta_b = factor_CRB * y_t_est_diff.^2 .* (- 6 * x_t_est_diff)./(d_s_km.^8); % vectorized
+        derivatex_theta_b = derivatex_theta_b + 8 * y_t_est_diff.^2 .* (- 4 * x_t_est_diff)./(d_s_km.^6); % vectorized
+
+        derivatex_theta_c = factor_CRB * y_t_est_diff .* (d_s_km.^2 - 6 * x_t_est_diff.^2)./(d_s_km.^8); % vectorized
+        derivatex_theta_c = derivatex_theta_c + 8 * y_t_est_diff .* (d_s_km.^2 - 4 * x_t_est_diff.^2)./(d_s_km.^6); % vectorized
         
-        % same for y_km
-        CRB_derivate_y_km = ...
+        derivatex_CRB_denominator = derivatex_theta_a .* theta_b + theta_a .* derivatex_theta_b - 2 * derivatex_theta_c;  % vectorized
 
+        derivatex_CRB_part1 = (derivatex_theta_a .* CRB_denominator - theta_a .* derivatex_CRB_denominator)./(CRB_denominator.^2); % vectorized
+        derivatex_CRB_part2 = (derivatex_theta_b .* CRB_denominator - theta_b .* derivatex_CRB_denominator)./(CRB_denominator.^2); % vectorized
+        
+        x_opt = x; % optimization variable
+        CRB_derivate_x_km = sum((derivatex_CRB_part1 + derivatex_CRB_part2) .* (x_opt - x_last)); % vectorized
+        
+        %% Derivative with respect to x
+        derivatey_theta_a = factor_CRB * x_t_est_diff.^2 .* (- 6 * y_t_est_diff)./(d_s_km.^8); % vectorized
+        derivatey_theta_a = derivatey_theta_a + 8 * x_t_est_diff.^2 .* (- 4 * y_t_est_diff)./(d_s_km.^6); % vectorized
+
+        derivatey_theta_b_part1 = (2* y_t_est_diff .* d_s_km.^2 - 6  * y_t_est_diff.^3)/(d_s_km.^8); % vectorized
+        derivatey_theta_b_part2 = (2* y_t_est_diff .* d_s_km.^2 - 4  * y_t_est_diff.^3)/(d_s_km.^6); % vectorized
+
+        derivatey_theta_b = factor_CRB * derivatey_theta_b_part1 + 8 * derivatey_theta_b_part2;
+
+        derivatey_theta_c = factor_CRB * x_t_est_diff .* (d_s_km.^2 - 6 * y_t_est_diff.^2)./(d_s_km.^8); % vectorized
+        derivatey_theta_c = derivatey_theta_c + 8 * x_t_est_diff .* (d_s_km.^2 - 4 * y_t_est_diff.^2)./(d_s_km.^6); % vectorized
+        
+        derivatey_CRB_denominator = derivatey_theta_a .* theta_b + theta_a .* derivatey_theta_b - 2 * derivatey_theta_c;  % vectorized
+
+        derivatey_CRB_part1 = (derivatey_theta_a .* CRB_denominator - theta_a .* derivatey_CRB_denominator)./(CRB_denominator.^2); % vectorized
+        derivatey_CRB_part2 = (derivatey_theta_b .* CRB_denominator - theta_b .* derivatey_CRB_denominator)./(CRB_denominator.^2); % vectorized
+        
+        y_opt = y; % optimization variable
+        CRB_derivate_y_km = sum((derivatey_CRB_part1 + derivatey_CRB_part2) .* (y_opt - y_last)); % vectorized
+        
         % sum_up for total CRB
         CRB_affine = CRB_derivate_x_km + CRB_derivate_y_km;
 
         %% Average Communication Rate
         sum_Nm = sum_Nm + Nm;
 
-        R_affine = B/sum_Nm * 1/log(2) * 1./(1+omega_c);
+        R_affine = B/sum_Nm * 1/log(2) * sum(1./(1+omega_c));
         
         % sum up over omega_km
 
