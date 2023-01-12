@@ -24,26 +24,24 @@ T_f = 1.5; % [s]
 
 %% Simulation Setup
 % Basestation
-X_s = [100; 100];
+S_s = [100; 100];
 % Communication user
-X_c = [1.3e3; 1.2e3];
+S_c = [1.3e3; 1.2e3];
 % Sensing target
-X_t = [200; 1.3e3];
+S_t = [200; 1.3e3];
 % Middle point between communication user und target user
-X_mid = (X_c + X_t)/2;
+S_mid = (S_c + S_t)/2;
 
-N_m = 10;
+N_m = 20;
 
 % Inital trajectory
-S_init = init_trajectory(X_s, N_m, X_mid, V_str);
-plot_trajectory(S_init, X_s, X_t, X_c)
+[S_init, V_init] = init_trajectory(S_s, N_m, S_mid, V_str);
+plot_trajectory(S_init, S_s, S_t, S_c)
 
 % Variables for evaluation
 S_out = S_init;
-xt_out = null(1);
-yt_out = null(1);
 
-%% Multi-stage approach for UWV trajectory design
+%% Multi-stage approach for UWV trajectory design - First stage
 m = 1; % Iteration index
 
 % Number of setpoints for the drone
@@ -59,30 +57,27 @@ while (E_m > Emin)
 
     % Obtain distance estimate
     for j = 1:K_m
-        dm_s_est(j) = ...
+        dm_s_est(j) = sqrt(H^2 + x_t_est_diff_old.^2 + y_t_est_diff_old.^2) + 10 * randn(1); % Replace with correct function
     end
         
     % target estimation via grid search
-    [xt_m_est, yt_m_est] = ...;
-    xt_out = [xt_out; xt_m_est];
-    yt_out = [yt_out; yt_m_est];
+    pos_target_est = S_t + 10*randn(2,1);
 
     % Iteration step
     m = m + 1;
     
     % Calculate Em
-    used_energy = ...
-    E_m = E_m - used_energy;
+    E_m = E_m - used_energy(V_init, K_m);
 
     % Inital trajectory
-    S_init = init_trajectory(X_s, N_m, X_mid, V_str);
-    plot_trajectory(S_init, X_s, X_t, X_c)
+    S_init = init_trajectory(S_s, N_m, S_mid, V_str);
+    plot_trajectory(S_init, S_s, S_t, S_c);
     
     % Optain UAV trajectory
+    sumKm_hover = null(1);
     
     % Initialization
-    ...
-
+    
     %% Optimization
     cvx_begin
         variable S(2,Nm)
@@ -97,10 +92,10 @@ while (E_m > Emin)
         %% Calculation of the CRB
         factor_CRB = (P*G_p*beta_0)/(a*sigma_0^2);
         
-        x_last = ...
-        y_last = ...
+        x_last = S_init(1,:);
+        y_last = S_init(1,:);
 
-        x_t_est = ...
+        x_t_est = 
         y_t_est = ...
         
         sumKm_hover = ...
@@ -181,12 +176,12 @@ while (E_m > Emin)
         minimize(nu * CRB_affine - (1 - nu) * R_affine);
 
         %% Conditions
-        Em_sum1 = sum(P_0 * (1 + 3* abs(V)/(U_tip.^2)) + 0.5 * D_0*rho*s*A*abs(V).^3);
+        Em_sum1 = sum(P_0 * (1 + 3* abs(V).^2/(U_tip.^2)) + 0.5 * D_0*rho*s*A*abs(V).^3);
         Em_sum2 = sum(P_I*delta);
         Em_sum3 = K_m * (P_0 + P_I);
 
         subject to
-            Em >= T_f * Em_sum1 + T_F * Em_sum2 + T_h * Em_sum3
+            Em >= T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3
 
             V_max >= abs(V);
             delta(i) >= 0;
@@ -205,7 +200,7 @@ while (E_m > Emin)
 
                 delta_last(i)^2 + 2 * delta_last(i) * (delta(i) - delta_last) >= Xi(i);
 
-                sqrt(H^2 + norm(S(:,i) - X_c)^2) >= d_c(i);
+                sqrt(H^2 + norm(S(:,i) - S_c)^2) >= d_c(i);
             end
             
     cvx_end
