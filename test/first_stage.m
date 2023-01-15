@@ -62,7 +62,7 @@ E_total = 40e3; % [J]
 E_m = E_total;
 
 % target estimation via grid search
-S_target_est = S_t+ L_x/20*randn(2,1);
+S_target_est = S_t + L_x/20*randn(2,1);
 
 % Middle point between communication user und target user
 S_mid = (S_c + S_target_est)/2;
@@ -77,150 +77,107 @@ omega_c_last = (P * alpha_0) ./ d_c_last;
 delta_square_last = sqrt(1 + norms(V_init, 2, 1).^4/(4*v_0^4)) - norms(V_init, 2 ,1).^2/(2 * v_0^2);
 
 %% Optimization
-    cvx_begin
-        variable S(2,N_tot)
-        variable V(2,N_tot)
-        variable delta(1,N_tot)
-        variable xi(1,N_tot)
-        variable d_c(1,N_tot)
-        variable omega_c(1,N_tot)
+cvx_begin
+    variable S(2,N_tot)
+    variable V(2,N_tot)
+    variable delta(1,N_tot)
+    variable xi(1,N_tot)
+    variable d_c(1,N_tot)
+    variable omega_c(1,N_tot)
 
-        %% Calculation of the CRB
-        factor_CRB = (P*G_p*beta_0)/(a*sigma_0^2);
+    %% Calculation of the CRB
+    S_hover = S_traj_init(:, mu:mu:N_tot);
+
+    CRB_const = compute_crb(S_hover, S_target_est, H, K_tot);
+
+    S_hover_x = S_traj_init(1,mu:mu:N_tot);
+    S_hover_y = S_traj_init(2,mu:mu:N_tot);
+    
+    %% Derivative with respect to x
+    derivatex_CRB = compute_gradient_x(S_hover, S_target_est, H, K_tot);
+
+    x_opt = S(1,mu:mu:N_tot); % optimization variable
+    CRB_derivate_x_km = sum(derivatex_CRB .* (x_opt - S_hover_x)); % vectorized
+    
+    %% Derivative with respect to y
+    derivatey_CRB = compute_gradient_x(S_hover, S_target_est, H, K_tot);
+
+    y_opt = S(2,mu:mu:N_tot); % optimization variable
+    CRB_derivate_y_km = sum(derivatey_CRB .* (y_opt - S_hover_y)); % vectorized
+    
+    % sum_up for total CRB
+    CRB_affine = CRB_const + CRB_derivate_x_km + CRB_derivate_y_km;
+
+    %% Average Communication Rate
+
+    R_affine = sum(B/N_tot * 1/log(2) * sum(1./(1 + omega_c_last)) .* (omega_c - omega_c_last));
+    
+    % sum up over omega_km
+
+    %% Objective function
+    % minimization
+    minimize(nu * CRB_affine - (1 - nu) * R_affine);
+
+    %% Conditions
+    Em_sum1 = sum(P_0 * (1 + 3 * pow_pos(norms(V,2,1), 2)/(U_tip.^2)) + 0.5 * D_0 * rho * s * A * pow_pos(norms(V, 2, 1), 3));
+    Em_sum2 = sum(P_I*delta);
+    Em_sum3 = K_tot* (P_0 + P_I);
+
+    subject to
+        E_total >= T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3
+
+        V_max >= norms(V, 2, 1);
+        delta >= 0;
+        S >= 0;
+        S >= 0;
+        L_x >= S;
+        L_y >= S;
+
+        xi >= 0;
+        omega_c >= 0
+        % pow_pos(d_c, 2) >= P * alpha_0 * inv_pos(omega_c);
+        omega_c >= P * alpha_0/sigma_0^2 * pow_pos(inv_pos(d_c), 2) ;
+        % norms([(S - S_c .* ones(2,N_tot)); H*ones(1, N_tot)], 2, 1) >= d_c;
+        H^2 + norms((S_traj_init - S_c), 2, 1) + diag((S_traj_init - S_c).' * (S - S_traj_init)).' >= pow_pos(d_c, 2);
         
-        S_hover_x = S_traj_init(1,mu:mu:N_tot);
-        S_hover_y = S_traj_init(2,mu:mu:N_tot);
-
-        pos_target_est_x = S_target_est(1);
-        pos_target_est_y = S_target_est(2);
-        
-        x_target_est_diff = (S_hover_x - pos_target_est_x);
-        y_target_est_diff = (S_hover_y - pos_target_est_y);
-
-        % d_s_km = sqrt(H^2 + x_target_est_diff.^2 + y_target_est_diff.^2);
-        d_s_km = norms([x_target_est_diff; y_target_est_diff; H*ones(1, K_tot)], 2, 1);
-
-        theta_a = sum(factor_CRB * x_target_est_diff.^2 ./ (d_s_km.^6) + 8 * x_target_est_diff.^2 ./ (d_s_km.^6) );
-        theta_b = sum(factor_CRB * x_target_est_diff.^2 ./ (d_s_km.^6) + 8 * y_target_est_diff.^2 ./ (d_s_km.^6) );
-        theta_c = sum(factor_CRB * x_target_est_diff.*y_target_est_diff ./ (d_s_km.^6) + 8 * x_target_est_diff.*y_target_est_diff ./ (d_s_km.^6));
-
-        CRB_denominator = theta_a .* theta_b - theta_c.^2; % vectorized
-
-        x_target_est_diff = (S_hover_x - pos_target_est_x);
-        y_target_est_diff = (S_hover_y - pos_target_est_y);
-
-        %% Derivative with respect to x
-        derivatex_theta_a_part1 = (2* x_target_est_diff .* d_s_km.^2 - 6  * x_target_est_diff.^3)/(d_s_km.^8); % vectorized
-        derivatex_theta_a_part2 = (2* x_target_est_diff .* d_s_km.^2 - 4  * x_target_est_diff.^3)/(d_s_km.^6); % vectorized
-
-        derivatex_theta_a = factor_CRB * derivatex_theta_a_part1 + 8 * derivatex_theta_a_part2;
-
-        derivatex_theta_b = factor_CRB * y_target_est_diff.^2 .* (- 6 * x_target_est_diff)./(d_s_km.^8); % vectorized
-        derivatex_theta_b = derivatex_theta_b + 8 * y_target_est_diff.^2 .* (- 4 * x_target_est_diff)./(d_s_km.^6); % vectorized
-
-        derivatex_theta_c = factor_CRB * y_target_est_diff .* (d_s_km.^2 - 6 * x_target_est_diff.^2)./(d_s_km.^8); % vectorized
-        derivatex_theta_c = derivatex_theta_c + 8 * y_target_est_diff .* (d_s_km.^2 - 4 * x_target_est_diff.^2)./(d_s_km.^6); % vectorized
-        
-        derivatex_CRB_denominator = derivatex_theta_a .* theta_b + theta_a .* derivatex_theta_b - 2 * derivatex_theta_c;  % vectorized
-
-        derivatex_CRB_part1 = (derivatex_theta_a .* CRB_denominator - theta_a .* derivatex_CRB_denominator)./(CRB_denominator.^2); % vectorized
-        derivatex_CRB_part2 = (derivatex_theta_b .* CRB_denominator - theta_b .* derivatex_CRB_denominator)./(CRB_denominator.^2); % vectorized
-        
-        x_opt = S(1,mu:mu:N_tot); % optimization variable
-        CRB_derivate_x_km = sum((derivatex_CRB_part1 + derivatex_CRB_part2) .* (x_opt - S_hover_x)); % vectorized
-        
-        %% Derivative with respect to x
-        derivatey_theta_a = factor_CRB * x_target_est_diff.^2 .* (- 6 * y_target_est_diff)./(d_s_km.^8); % vectorized
-        derivatey_theta_a = derivatey_theta_a + 8 * x_target_est_diff.^2 .* (- 4 * y_target_est_diff)./(d_s_km.^6); % vectorized
-
-        derivatey_theta_b_part1 = (2* y_target_est_diff .* d_s_km.^2 - 6  * y_target_est_diff.^3)/(d_s_km.^8); % vectorized
-        derivatey_theta_b_part2 = (2* y_target_est_diff .* d_s_km.^2 - 4  * y_target_est_diff.^3)/(d_s_km.^6); % vectorized
-
-        derivatey_theta_b = factor_CRB * derivatey_theta_b_part1 + 8 * derivatey_theta_b_part2;
-
-        derivatey_theta_c = factor_CRB * x_target_est_diff .* (d_s_km.^2 - 6 * y_target_est_diff.^2)./(d_s_km.^8); % vectorized
-        derivatey_theta_c = derivatey_theta_c + 8 * x_target_est_diff .* (d_s_km.^2 - 4 * y_target_est_diff.^2)./(d_s_km.^6); % vectorized
-        
-        derivatey_CRB_denominator = derivatey_theta_a .* theta_b + theta_a .* derivatey_theta_b - 2 * derivatey_theta_c;  % vectorized
-
-        derivatey_CRB_part1 = (derivatey_theta_a .* CRB_denominator - theta_a .* derivatey_CRB_denominator)./(CRB_denominator.^2); % vectorized
-        derivatey_CRB_part2 = (derivatey_theta_b .* CRB_denominator - theta_b .* derivatey_CRB_denominator)./(CRB_denominator.^2); % vectorized
-        
-        y_opt = S(2,mu:mu:N_tot); % optimization variable
-        CRB_derivate_y_km = sum((derivatey_CRB_part1 + derivatey_CRB_part2) .* (y_opt - S_hover_y)); % vectorized
-        
-        % sum_up for total CRB
-        CRB_affine = CRB_derivate_x_km + CRB_derivate_y_km;
-
-        %% Average Communication Rate
-
-        R_affine = sum(B/N_tot * 1/log(2) * sum(1./(1 + omega_c_last)) .* (omega_c - omega_c_last));
-        
-        % sum up over omega_km
-
-        %% Objective function
-        % minimization
-        minimize(nu * CRB_affine - (1 - nu) * R_affine);
-
-        %% Conditions
-        Em_sum1 = sum(P_0 * (1 + 3 * pow_pos(norms(V,2,1), 2)/(U_tip.^2)) + 0.5 * D_0 * rho * s * A * pow_pos(norms(V, 2, 1), 3));
-        Em_sum2 = sum(P_I*delta);
-        Em_sum3 = K_tot* (P_0 + P_I);
-
-        subject to
-            E_total >= T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3
-
-            V_max >= abs(V);
-            delta >= 0;
-            S >= 0;
-            S >= 0;
-            L_x >= S;
-            L_y >= S;
-
-            xi >= 0;
-            omega_c >= 0
-            d_c >= P * alpha_0 * inv_pos(omega_c);
+        for i = 1:N_tot
             
-            % norms([(S - S_c .* ones(2,N_tot)); H*ones(1, N_tot)], 2, 1) >= d_c;
+            norm(V_init(:, i))^2 / v_0^2 + 2/v_0^2 * V_init(:, i).' * (V(:,i) - V_init(:,i)) >= 1/delta_square_last(i) - xi(i);
 
-            for i = 1:N_tot
-                
-                norm(V_init(:, i))^2 / v_0^2 + 2/v_0^2 * V_init(:, i).' * (V(:,i) - V_init(:,i)) >= 1/delta_square_last(i) - xi(i);
-
-                delta_square_last(i) + 2 * sqrt(delta_square_last(i)) * (delta(i) - sqrt(delta_square_last(i))) >= xi(i);
-
-                sqrt(H^2 + pow_pos(norm(S(:,i) - S_c), 2)) >= d_c(i);
-                % norms([(S - S_c .* ones(2,N_tot)); H*ones(1, N_tot)], 2, 1);
-            end
+            delta_square_last(i) + 2 * sqrt(delta_square_last(i)) * (delta(i) - sqrt(delta_square_last(i))) >= xi(i);
             
-    cvx_end
-
-    dm_s_est = zeros(K_m, 1);
-
-    % Obtain distance estimate
-    for j = 1:K_m
-        dm_s_est(j) = sqrt(H^2 + x_t_est_diff_old.^2 + y_t_est_diff_old.^2) + 10 * randn(1); % Replace with correct function
-    end
+            % taylor_distance_square = H^2 + pow_pos(norm(S_target_est(:,i) - S_c), 2) + (S_target_est(:,i) - S_c).' * (S(:,i) - S_target_est(:,i))
+            % taylor_distance_square >= pow_pos(d_c(i), 2);
+        end
         
-    % target estimation via grid search
-    pos_target_est = S_t + 10*randn(2,1);
+cvx_end
 
-    % Iteration step
-    m = m + 1;
-    
-    % Calculate Em
-    E_m = E_m - used_energy(V_init, K_m);
+dm_s_est = zeros(K_m, 1);
 
-    % Inital trajectory
-    S_traj_init = init_trajectory(S_s, N_tpt, S_mid, V_str);
-    plot_trajectory(S_traj_init, S_s, S_t, S_c);
+% Obtain distance estimate
+for j = 1:K_m
+    dm_s_est(j) = sqrt(H^2 + x_t_est_diff_old.^2 + y_t_est_diff_old.^2) + 10 * randn(1); % Replace with correct function
+end
     
-    % Optain UAV trajectory
-    sumKm_hover = null(1);
-    
-    % Initialization
-    
-    
+% target estimation via grid search
+pos_target_est = S_t + 10*randn(2,1);
 
-    % Save the opitmized variables
-    S_out = [S_out; S];
+% Iteration step
+m = m + 1;
+
+% Calculate Em
+E_m = E_m - used_energy(V_init, K_m);
+
+% Inital trajectory
+S_traj_init = init_trajectory(S_s, N_tpt, S_mid, V_str);
+plot_trajectory(S_traj_init, S_s, S_t, S_c);
+
+% Optain UAV trajectory
+sumKm_hover = null(1);
+
+% Initialization
+
+
+
+% Save the opitmized variables
+S_out = [S_out; S];
