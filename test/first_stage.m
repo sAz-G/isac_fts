@@ -100,7 +100,7 @@ cvx_begin
     CRB_derivate_x_km = sum(derivatex_CRB .* (x_opt - S_hover_x)); % vectorized
     
     %% Derivative with respect to y
-    derivatey_CRB = compute_gradient_x(S_hover, S_target_est, H, K_tot);
+    derivatey_CRB = compute_gradient_y(S_hover, S_target_est, H, K_tot);
 
     y_opt = S(2,mu:mu:N_tot); % optimization variable
     CRB_derivate_y_km = sum(derivatey_CRB .* (y_opt - S_hover_y)); % vectorized
@@ -134,9 +134,11 @@ cvx_begin
         L_y >= S;
 
         xi >= 0;
-        omega_c >= 0
+        omega_c >= 0;
+        
         % pow_pos(d_c, 2) >= P * alpha_0 * inv_pos(omega_c);
-        omega_c >= P * alpha_0/sigma_0^2 * pow_pos(inv_pos(d_c), 2) ;
+        omega_c >= P * alpha_0/sigma_0^2 * pow_pos(inv_pos(d_c), 2);
+
         % norms([(S - S_c .* ones(2,N_tot)); H*ones(1, N_tot)], 2, 1) >= d_c;
         H^2 + norms((S_traj_init - S_c), 2, 1) + diag((S_traj_init - S_c).' * (S - S_traj_init)).' >= pow_pos(d_c, 2);
         
@@ -145,39 +147,6 @@ cvx_begin
             norm(V_init(:, i))^2 / v_0^2 + 2/v_0^2 * V_init(:, i).' * (V(:,i) - V_init(:,i)) >= 1/delta_square_last(i) - xi(i);
 
             delta_square_last(i) + 2 * sqrt(delta_square_last(i)) * (delta(i) - sqrt(delta_square_last(i))) >= xi(i);
-            
-            % taylor_distance_square = H^2 + pow_pos(norm(S_target_est(:,i) - S_c), 2) + (S_target_est(:,i) - S_c).' * (S(:,i) - S_target_est(:,i))
-            % taylor_distance_square >= pow_pos(d_c(i), 2);
         end
         
 cvx_end
-
-dm_s_est = zeros(K_m, 1);
-
-% Obtain distance estimate
-for j = 1:K_m
-    dm_s_est(j) = sqrt(H^2 + x_t_est_diff_old.^2 + y_t_est_diff_old.^2) + 10 * randn(1); % Replace with correct function
-end
-    
-% target estimation via grid search
-pos_target_est = S_t + 10*randn(2,1);
-
-% Iteration step
-m = m + 1;
-
-% Calculate Em
-E_m = E_m - used_energy(V_init, K_m);
-
-% Inital trajectory
-S_traj_init = init_trajectory(S_s, N_tpt, S_mid, V_str);
-plot_trajectory(S_traj_init, S_s, S_t, S_c);
-
-% Optain UAV trajectory
-sumKm_hover = null(1);
-
-% Initialization
-
-
-
-% Save the opitmized variables
-S_out = [S_out; S];
