@@ -2,14 +2,9 @@ function gradient_x_out = compute_gradient_x(S_hover_in, S_target_est_in, H_in, 
 %COMPUTE_GRADIENT Summary of this function goes here
 %   Detailed explanation goes here
 
-    P = db2mag(20e-3); % transmit power [dB]
-    N_0 = db2pow(-170e-3); % [dB/Hz]
-    B = 1e6; % bandwidth [Hz]
-    G_p = 0.1 * B; % Signal processing gain [Hz]
-    beta_0 = db2pow(-47); % channel power at reference distance d_s(k) = 1m [dB]
-    a = 10; % pre-determined constant related to the system setting
-    sigma_0 = sqrt(N_0 * B); % noise power [dB]
-
+    % import the constant parameters
+    run("call_hyperParam.m")
+    
     [theta_a, theta_b, theta_c] = compute_thetas(S_hover_in, S_target_est_in, H_in, K_tot_in);
     CRB_denominator = theta_a * theta_b - theta_c^2;
     
