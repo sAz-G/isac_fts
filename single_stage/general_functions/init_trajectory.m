@@ -15,9 +15,11 @@ function [S_init, V_init] = init_trajectory(s_start, N_m, s_mid, V_str, T_f)
 
 S_init = zeros(2,N_m);
 V_init  = ones(2,N_m).*V_str.*(s_mid - s_start)./norm(s_mid - s_start);
+S_init(1,:) = linspace(s_start(1),s_mid(1), N_m);
+S_init(2,:) = linspace(s_start(2),s_mid(2), N_m);
 
-for n = 1:N_m
-        % here we multiply by T_f. In the paper they dont, check that point
-        S_init(:,n) = s_start + V_str .* T_f .* (n-1) .* (s_mid - s_start) ./ norm(s_mid - s_start);
-end
+% for n = 1:N_m
+%         % here we multiply by T_f. In the paper they dont, check that point
+%         S_init(:,n) = s_start + V_str .* T_f .* (n-1) .* (s_mid - s_start) ./ norm(s_mid - s_start);
+% end
 
