@@ -2,45 +2,11 @@ clear;
 close all;
 
 %% Simulation parameter
-eta = 1;
 
-alpha_0 = db2pow(-50); % channel power at reference distance d_c(n) = 1m [dB]
-beta_0 = db2pow(-47); % channel power at reference distance d_s(k) = 1m [dB]
-N_0 = db2pow(-170/10)*; % [dB/Hz]
-B = 1e6; % bandwidth [Hz]
-sigma_0 = sqrt(N_0 * B); % noise power [dB]
-P = db2mag(20e-3); % transmit power [dB]
-G_p = 0.1 * B; % Signal processing gain [Hz]
-V_max = 30; % maximum velocity [m/s]
-H = 200; % flying height [m]
-T_h = 1; % hovering duration [s]
-V_str = 20; % [m/s]
+% import the constant parameters
+run("call_hyperParam.m")
+
 mu = 5; %
-L_x = 1500; % dimension of the ground in x direction [m]
-L_y = 1500; % dimension of the ground in y direction [m]
-T_f = 1.5; % flying duration [s]
-
-a = 10; % pre-determined constant related to the system setting
-
-% Energy
-W = 20; % aircraft weight in Newton
-delta_eng = 0.012;
-rho = 1.225; % air density [kg/m^3]
-A = 0.503; % rotor_disc area in [m^2]
-Sigma = 300; % blade angular velocity in [radians/second]
-s = 0.05; % rotor solidity [m^3]
-R = 0.4; % rotor radius in [m]
-k = 0.1; % incremental correction factor to include power;
-
-% P_0 = delta_eng/8 * rho * s * A * Sigma^3 * R^3;
-P_0 = 80; % blade profile power [W]
-
-% P_I = (1 + k) * (W^(3/2))/sqrt(2*rho * A);
-P_I = 88.6; % induced power in hovering status [W]
-U_tip = 120; % tip speed of the rotor [m/s]
-v_0 = 4.03; % mean rotor induced velocity in forward flying [m/s]
-D_0 = 0.6; % Fuselage drag ratio
-
 
 %% Simulation Setup
 % Basestation
