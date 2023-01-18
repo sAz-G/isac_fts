@@ -18,6 +18,6 @@ V_init  = ones(2,N_m).*V_str.*(s_mid - s_start)./norm(s_mid - s_start);
 
 for n = 1:N_m
         % here we multiply by T_f. In the paper they dont, check that point
-        S_init(:,n) = s_start + V_str .* T_f .* n .* (s_mid - s_start) ./ norm(s_mid - s_start);
+        S_init(:,n) = s_start + V_str .* T_f .* (n-1) .* (s_mid - s_start) ./ norm(s_mid - s_start);
 end
 
