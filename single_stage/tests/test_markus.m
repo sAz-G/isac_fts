@@ -193,7 +193,7 @@ while (E_m > Emin)
             xi >= 0;
             
             d_c >= (P * alpha_0) / omega_c;
-
+            H^2 + norms((S_traj_init - S_c), 2, 1) + diag((S_traj_init - S_c).' * (S_traj_opt - S_traj_init)).' >= 
             for i = 1:N_m
                 
                 abs(V_last(i))^2 / v_0^2 + 2/v_0 * V_last.' * (V(i) - V_last(i)) >= 1/delta_last(i)^2 - Xi(i);

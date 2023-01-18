@@ -6,7 +6,7 @@ eta = 1;
 
 alpha_0 = db2pow(-50); % channel power at reference distance d_c(n) = 1m [dB]
 beta_0 = db2pow(-47); % channel power at reference distance d_s(k) = 1m [dB]
-N_0 = db2pow(-170e-3); % [dB/Hz]
+N_0 = db2pow(-170/10)*; % [dB/Hz]
 B = 1e6; % bandwidth [Hz]
 sigma_0 = sqrt(N_0 * B); % noise power [dB]
 P = db2mag(20e-3); % transmit power [dB]
