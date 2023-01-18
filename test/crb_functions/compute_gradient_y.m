@@ -1,4 +1,4 @@
-function [gradient_y_out, derivatey_theta_a, derivatey_theta_b, derivatey_theta_c] = compute_gradient_y(S_hover_in, S_target_est_in, H_in, K_tot_in)
+function gradient_y_out = compute_gradient_y(S_hover_in, S_target_est_in, H_in, K_tot_in)
 %COMPUTE_GRADIENT_Y Summary of this function goes here
 %   Detailed explanation goes here
 
