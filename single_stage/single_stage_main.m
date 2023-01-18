@@ -5,8 +5,8 @@ close all;
 
 % import the constant parameters
 run("call_hyperParam.m")
-
-mu = 5; %
+eta = 1; 
+mu  = 5; %
 
 %% Simulation Setup
 % Basestation
@@ -35,7 +35,7 @@ S_mid = (S_c + S_target_est)/2;
 
 % Inital trajectory
 [S_traj_init, V_init] = init_trajectory(S_s, N_tot, S_mid, V_str, T_f);
-plot_trajectory(S_traj_init, S_s, S_t, S_c)
+plot_map(S_traj_init, S_s, S_t, S_c);
 
 %d_c_last = sqrt(H^2 + norms((S_traj_init - S_c), 2, 1))
 d_c_last = norms([(S_traj_init - S_c); H*ones(1, N_tot)], 2, 1);
@@ -48,9 +48,7 @@ cvx_begin
     variable V(2,N_tot)
     variable delta(1,N_tot)
     variable xi(1,N_tot)
-    % variable d_c(1,N_tot)
-    % variable omega_c(1,N_tot)
-
+  
     %% Calculation of the CRB
     S_hover = S_traj_init(:, mu:mu:N_tot);
 
@@ -102,9 +100,9 @@ cvx_begin
     Em_sum3 = K_tot* (P_0 + P_I);
 
     subject to
-        E_total >= T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3
+        E_total >= T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3;
             
-        S(:, 1) == S_s
+        S(:, 1) == S_s;
 
         V_max >= norms(V, 2, 1);
         delta >= 0;
@@ -128,3 +126,5 @@ cvx_begin
         end
         
 cvx_end
+
+plot_map(S, S_s, S_t, S_c);
