@@ -2,7 +2,7 @@ clear;
 close all;
 
 %% Simulation parameter
-nu = 0.5;
+eta = 1;
 
 alpha_0 = db2pow(-50); % channel power at reference distance d_c(n) = 1m [dB]
 beta_0 = db2pow(-47); % channel power at reference distance d_s(k) = 1m [dB]
@@ -82,8 +82,8 @@ cvx_begin
     variable V(2,N_tot)
     variable delta(1,N_tot)
     variable xi(1,N_tot)
-    variable d_c(1,N_tot)
-    variable omega_c(1,N_tot)
+    % variable d_c(1,N_tot)
+    % variable omega_c(1,N_tot)
 
     %% Calculation of the CRB
     S_hover = S_traj_init(:, mu:mu:N_tot);
@@ -109,14 +109,26 @@ cvx_begin
     CRB_affine = CRB_const + CRB_derivate_x_km + CRB_derivate_y_km;
 
     %% Average Communication Rate
-
-    R_affine = sum(B/N_tot * 1/log(2) * sum(1./(1 + omega_c_last)) .* (omega_c - omega_c_last));
+    R_const = compute_rate(S_traj_init, S_c, H, N_tot);
     
-    % sum up over omega_km
+    %% Derivative with respect to x
+    derivatex_rate = compute_gradient_rate_x(S_traj_init, S_target_est, H, N_tot);
+
+    x_traj_opt = S(1,:); % optimization variable
+    R_derivate_x = sum(derivatex_rate .* (x_traj_opt - S_traj_init(1,:))); % vectorized
+    
+    %% Derivative with respect to y
+    derivatey_rate = compute_gradient_rate_y(S_traj_init, S_target_est, H, N_tot);
+
+    y_traj_opt = S(2,:); % optimization variable
+    R_derivate_y = sum(derivatey_rate .* (y_traj_opt -  S_traj_init(1,:))); % vectorized
+
+    %R_affine = sum(B/N_tot * 1/log(2) * sum(1./(1 + omega_c_last)) .* (omega_c - omega_c_last));
+    R_affine = R_const + R_derivate_x + R_derivate_y;
 
     %% Objective function
     % minimization
-    minimize(nu * CRB_affine - (1 - nu) * R_affine);
+    minimize(eta * CRB_affine - (1 - eta) * R_affine);
 
     %% Conditions
     Em_sum1 = sum(P_0 * (1 + 3 * pow_pos(norms(V,2,1), 2)/(U_tip.^2)) + 0.5 * D_0 * rho * s * A * pow_pos(norms(V, 2, 1), 3));
@@ -125,6 +137,8 @@ cvx_begin
 
     subject to
         E_total >= T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3
+            
+        S(:, 1) == S_s
 
         V_max >= norms(V, 2, 1);
         delta >= 0;
@@ -134,13 +148,11 @@ cvx_begin
         L_y >= S;
 
         xi >= 0;
-        omega_c >= 0;
-        
-        % pow_pos(d_c, 2) >= P * alpha_0 * inv_pos(omega_c);
-        omega_c >= P * alpha_0/sigma_0^2 * pow_pos(inv_pos(d_c), 2);
+        % omega_c >= 0;
 
-        % norms([(S - S_c .* ones(2,N_tot)); H*ones(1, N_tot)], 2, 1) >= d_c;
-        H^2 + norms((S_traj_init - S_c), 2, 1) + diag((S_traj_init - S_c).' * (S - S_traj_init)).' >= pow_pos(d_c, 2);
+        % omega_c >= P * alpha_0/sigma_0^2 * pow_pos(inv_pos(d_c), 2);
+
+        % H^2 + norms((S_traj_init - S_c), 2, 1) + diag((S_traj_init - S_c).' * (S - S_traj_init)).' >= pow_pos(d_c, 2);
         
         for i = 1:N_tot
             
