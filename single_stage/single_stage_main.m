@@ -1,10 +1,15 @@
 clear;
 close all;
 
+addpath(genpath(".\crb_functions"));
+addpath(genpath(".\general_functions"));
+addpath(genpath(".\rate_functions"));
+
 %% Simulation parameter
 
 % import the constant parameters
 run("call_hyperParam.m")
+
 eta = 1; 
 mu  = 5; %
 
