@@ -9,7 +9,7 @@ addpath(genpath(".\rate_functions"));
 
 %% Simulation parameter
 run("call_hyperParam.m")
-eta = 0.5; 
+eta = 0.999999; 
 mu  = 5; 
 
 %% Simulation Setup
@@ -20,7 +20,7 @@ S_c = [1.3e3; 1.2e3];
 % Sensing target
 S_t = [200; 1.3e3];
 
-N_tot = 45;
+N_tot = 25;
 
 %% Multi-stage approach for UWV trajectory design - First stage
 
@@ -28,11 +28,11 @@ N_tot = 45;
 K_tot = floor(N_tot/mu); % Number of hover points
 
 % Energy parameters
-E_total = 40e3; % [J]
+E_total = 35e3; % [J]
 E_m = E_total;
 
 % target estimation via grid search
-S_target_est = S_t + [100; -100];
+S_target_est = S_t ;%+ [100; -100];
 
 % Middle point between communication user und target user
 S_mid = (S_c + S_target_est)/2;
@@ -41,9 +41,6 @@ S_mid = (S_c + S_target_est)/2;
 [S_init, V_init] = init_trajectory(S_s, N_tot, S_mid, V_str, T_f);
 plot_map(S_init, S_s, S_t, S_target_est, S_c);
 
-% d_c_last = sqrt(H^2 + norms((S_traj_init - S_c), 2, 1))
-d_c_last = norms([(S_init - S_c); H*ones(1, N_tot)], 2, 1);
-omega_c_last = (P * alpha_0) ./ d_c_last;
 delta_square_last = sqrt(1 + norms(V_init, 2, 1).^4/(4*v_0^4)) - norms(V_init, 2 ,1).^2/(2 * v_0^2);
 
 
@@ -80,8 +77,6 @@ cvx_begin
     variable V(2,N_tot)
     variable delta(1,N_tot)
     variable xi(1,N_tot)
-    variable d_c(1,N_tot)
-    variable omega_c(1,N_tot)
 
  
     %x_opt = S(1,mu:mu:N_tot); % optimization variable
@@ -100,10 +95,7 @@ cvx_begin
     R_derivate_y = sum(derivatey_rate .* (S(2,:) -  S_init(2,:))); % vectorized
 
     R_affine = R_const + R_derivate_x + R_derivate_y;
-    % R_affine = R_derivate_x + R_derivate_y;
-    % R_affine = (R_const + R_derivate_x + R_derivate_y) / compute_rate(S_c, S_c, H, 1);
-    
-    % sum up over omega_km
+ 
 
     %% Objective function
     % minimization
@@ -126,15 +118,20 @@ cvx_begin
         L_y >= S(2,:);
 
         xi >= 0;
-        omega_c >= 0;
         
-        %%% pow_pos(d_c, 2) >= P * alpha_0 * inv_pos(omega_c);
-        omega_c >= P * alpha_0/sigma_0^2 * pow_pos(inv_pos(d_c), 2);
+    
+        for u = 1:N_tot-1
+        
+            norm(S(:,u+1) - S(:,u)) <= V_max*T_f;
+           
+        end
+        
+        for i = 1:N_tot
+            
+            norm(V_init(:, i))^2 / v_0^2 + 2/v_0^2 * V_init(:, i).' * (V(:,i) - V_init(:,i)) >= 1/delta_square_last(i) - xi(i);
 
-        %%% norms([(S - S_c .* ones(2,N_tot)); H*ones(1, N_tot)], 2, 1) >= d_c;
-        H^2 + norms((S_init - S_c), 2, 1) + diag((S_init - S_c).' * (S - S_init)).' >= pow_pos(d_c, 2);
-        
-        13:30   
+            delta_square_last(i) + 2 * sqrt(delta_square_last(i)) * (delta(i) - sqrt(delta_square_last(i))) >= xi(i);
+        end
         
 cvx_end
 
