@@ -4,7 +4,7 @@ clc;
 close all;
 
 addpath(genpath(".\crb_functions"));
-addpath(genpath(".\general_functions"));
+addpath(genpath(".\helper_functions"));
 addpath(genpath(".\rate_functions"));
 
 %% Simulation parameter
