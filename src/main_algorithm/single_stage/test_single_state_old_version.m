@@ -3,13 +3,14 @@ clear;
 clc;
 close all;
 
+addpath(genpath("..\..\..\src"));
 addpath(genpath(".\crb_functions"));
 addpath(genpath(".\helper_functions"));
 addpath(genpath(".\rate_functions"));
 
 %% Simulation parameter
 run("call_hyperParam.m")
-eta = 0.999999; 
+eta = 0.5; 
 mu  = 5; 
 
 %% Simulation Setup
