@@ -1,3 +1,4 @@
+%% multi stage approach 
 clear;
 close all;
 
@@ -40,7 +41,7 @@ S_mid = (S_c + S_target_est)/2;
 
 % Inital trajectory
 [S_traj_init, V_init] = init_trajectory(S_s, N_tot, S_mid, V_str, T_f);
-plot_map(S_traj_init, S_s, S_t, S_c);
+plot_map(S_traj_init, S_s, S_t,S_target_est, S_c);
 
 %d_c_last = sqrt(H^2 + norms((S_traj_init - S_c), 2, 1))
 d_c_last = norms([(S_traj_init - S_c); H*ones(1, N_tot)], 2, 1);
@@ -132,4 +133,4 @@ cvx_begin
         
 cvx_end
 
-plot_map(S, S_s, S_t, S_c);
+plot_map(S, S_s, S_t,S_target_est, S_c);

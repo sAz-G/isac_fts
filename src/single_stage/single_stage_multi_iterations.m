@@ -2,7 +2,7 @@ clear;
 close all;
 
 %% Simulation parameter
-eta = 0.5;
+eta = .5;
 
 % import the constant parameters
 run("call_hyperParam.m")
@@ -17,7 +17,7 @@ S_c = [1.3e3; 1.2e3];
 % Sensing target
 S_t = [200; 1.3e3];
 
-N_tot = 70;
+N_tot = 25;
 
 %% Multi-stage approach for UWV trajectory design - First stage
 
@@ -45,11 +45,11 @@ delta_square_last = sqrt(1 + norms(V_last_iter, 2, 1).^4/(4*v_0^4)) - norms(V_la
 
 counter_iterations = 0;
 
-while counter_iterations < 30
+while counter_iterations < 10
     %% Optimization
     cvx_begin
         variable S(2,N_tot)
-        variable V(2,N_tot)
+        variable V(2,N_tot-1)
         variable delta(1,N_tot)
         variable xi(1,N_tot)
     
@@ -102,7 +102,8 @@ while counter_iterations < 30
         Em_sum1 = sum(P_0 * (1 + 3 * pow_pos(norms(V,2,1), 2)/(U_tip.^2)) + 0.5 * D_0 * rho * s * A * pow_pos(norms(V, 2, 1), 3));
         Em_sum2 = sum(P_I*delta);
         Em_sum3 = K_tot* (P_0 + P_I);
-    
+        V == (S(:,2:N_tot) - S(:,1:(N_tot-1)))./T_f;
+
         subject to
             E_total >= T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3
     
@@ -110,6 +111,7 @@ while counter_iterations < 30
             delta >= 0;
             S >= 0;
             S >= 0;
+            S(:,1) == S_s;
             L_x >= S;
             L_y >= S;
     
@@ -120,7 +122,7 @@ while counter_iterations < 30
     
             % H^2 + norms((S_last_iter - S_c), 2, 1) + diag((S_last_iter - S_c).' * (S - S_last_iter)).' >= pow_pos(d_c, 2);
             
-            for i = 1:N_tot  
+            for i = 1:N_tot-1  
                 norm(V_last_iter(:, i))^2 / v_0^2 + 2/v_0^2 * V_last_iter(:, i).' * (V(:,i) - V_last_iter(:,i)) >= 1/delta_square_last(i) - xi(i);
     
                 delta_square_last(i) + 2 * sqrt(delta_square_last(i)) * (delta(i) - sqrt(delta_square_last(i))) >= xi(i);
@@ -128,13 +130,15 @@ while counter_iterations < 30
             end
             
     cvx_end
-
+    %w_star = .5;
     S_last_iter = S;
+    %S_last_iter = S_last_iter + w_star.*(S-S_last_iter);
+
     V_last_iter = V;
     delta_square_last = delta.^2;   
 
     counter_iterations = counter_iterations + 1;
 end
 
-plot_trajectory(S, S_s, S_t, S_c)
+plot_map(S, S_s, S_t,S_target_est, S_c);
 

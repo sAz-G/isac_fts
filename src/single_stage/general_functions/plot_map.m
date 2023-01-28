@@ -51,5 +51,6 @@ function [p_s, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c)
     p_c.MarkerEdgeColor = 'c';
     
     legend('S', 's_b', 's_t','s_{est}', 's_c')
+    
 end
 
