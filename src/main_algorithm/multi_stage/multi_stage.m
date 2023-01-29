@@ -34,13 +34,13 @@ S_c = [1.3e3; 1.2e3];
 S_t = [200; 1.3e3];
 
 % estimate the target randomly 
-S_target_est = S_t + [100; -100];
+S_target_est = [1200; 100]; %S_t + [100; -100];
 
 % Middle point between communication user und target user
 S_mid = (S_c + S_target_est)/2;
 
 % Inital trajectory
-[S_init, V_init] = init_trajectory(S_s, N_stg, S_mid, V_str, T_f);
+[S_init, V_init] = init_trajectory(S_s, S_mid,N_stg, params);
 
 plot_map(S_init, S_s, S_t, S_target_est, S_c);
 
@@ -61,10 +61,10 @@ while E_min < E_m
 S_mid = (S_c + S_target_est)/2;
 
 % Inital trajectory
-[S_init, V_init] = init_trajectory(S_s, N_stg, S_mid, V_str, T_f);
+[S_init, V_init] = init_trajectory(S_s, S_mid, N_stg, params);
 
 % calc initial values of parametes
-delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*v_0^4)) - norms(V_init, 2 ,1).^2/(2 * v_0^2);
+delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4)) - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
 xi_init = delta_square_init;
 
 % run the mth stag
@@ -77,7 +77,7 @@ end
 % get the new estimated target
 [x_t,y_t] = grid_vectors(1500,1500,1000,1000);
 
-[x_t_idx,y_t_idx]  = get_min(D_meas(:,m),x_t,y_t,S_opt_m(1, mu:mu:N_stg),S_opt_m(2, mu:mu:N_stg), H,params);
+[x_t_idx,y_t_idx]  = get_min(D_meas(:,m),x_t,y_t,S_opt_m(1, mu:mu:N_stg),S_opt_m(2, mu:mu:N_stg),params);
 
 S_target_est = [x_t(x_t_idx), y_t(y_t_idx)]; 
 % calculate the energy 
