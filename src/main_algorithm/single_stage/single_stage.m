@@ -1,4 +1,4 @@
-function [S_m, E_used_m, V_m, xi_m, delta_m] = single_stage(E_m,N_stg,delta_square_last,K_stg,S_c,S_init, S_t_est,S_s, V_init,params)
+function [S_m, E_used_m, V_m, xi_m, delta_m] = single_stage(E_m,N_stg,delta_square_last,K_stg,s_c,S_init, s_t_est,S_s, V_init,params)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -25,16 +25,16 @@ S_hover_x   = S_init(1,mu:mu:N_stg);
 S_hover_y   = S_init(2,mu:mu:N_stg);
 
 % Derivative with respect to x
-derivatex_CRB = compute_gradient_x(S_hover, S_t_est, H, K_stg);
+derivatex_CRB = compute_gradient_x(S_hover, s_t_est, H, K_stg, params);
 
 % Derivative with respect to y
-derivatey_CRB = compute_gradient_y(S_hover, S_t_est, H, K_stg);
+derivatey_CRB = compute_gradient_y(S_hover, s_t_est, H, K_stg, params);
 
 % Derivative with respect to x
-derivatex_rate = compute_gradient_rate_x(S_init, S_c, H, N_stg);
+derivatex_rate = compute_gradient_rate_x(S_init, s_c, H, N_stg,params);
 
 % Derivative with respect to y
-derivatey_rate = compute_gradient_rate_y(S_init, S_c, H, N_stg);
+derivatey_rate = compute_gradient_rate_y(S_init, s_c, H, N_stg, params);
 
 %y_opt = S(2,mu:mu:N_tot); % optimization variable
 
