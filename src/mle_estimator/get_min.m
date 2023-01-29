@@ -1,4 +1,4 @@
-function [idx, idy] = get_min(D_est,x_t,y_t,x_jt,y_jt,H)
+function [idx, idy] = get_min(D_est,x_t,y_t,x_jt,y_jt,H ,params)
 % get_min(est, params) is the function, for which we want to find the
 % minimum(objective function (of)).
 % 
@@ -20,22 +20,22 @@ function [idx, idy] = get_min(D_est,x_t,y_t,x_jt,y_jt,H)
 
 x_dim = length(x_t); % dimension in x direction of the matrices after using meshgrid
 y_dim = length(y_t); % dimension in y direction of the matrices after using meshgrid
-xj_dim = length(y_jt); % dimension in x direction of the matrices after using meshgrid
-yj_dim = length(x_jt); % dimension in y direction of the matrices after using meshgrid
+xj_dim = length(x_jt); % dimension in x direction of the matrices after using meshgrid
+yj_dim = length(y_jt); % dimension in y direction of the matrices after using meshgrid
 
-[X_t, Y_t] = meshgrid(y_t, x_t);
+[X_t, Y_t] = meshgrid(x_t, y_t);
 X_t        = repmat(X_t, [1,1,xj_dim]);
 Y_t        = repmat(Y_t, [1,1,yj_dim]);
 
 D_mat_est  = ones(x_dim,y_dim, length(D_est));
 Y_jt       = ones(x_dim,y_dim,yj_dim);
 X_jt       = ones(x_dim,y_dim,xj_dim);
-H_mat      = ones(x_dim,y_dim, length(D_est)).*H.^2;
+H_mat      = ones(x_dim,y_dim, length(D_est)).*H;
 
 for k = 1:length(D_est)
     D_mat_est(:,:,k) = D_est(k);
-    Y_jt(:,:,k)      = x_jt(k);
-    X_jt(:,:,k)      = y_jt(k);
+    Y_jt(:,:,k)      = y_jt(k);
+    X_jt(:,:,k)      = x_jt(k);
 end
 
 P_xy = (X_t-X_jt).^2+(Y_t-Y_jt).^2 + H_mat.^2;
@@ -46,10 +46,17 @@ denominator = P_xy;
 
 fraction = (numerator./denominator).^2;
 
-func = sum(log_Pxy + fraction,3);
+P              = params.sim.P;
+G_p            = params.sim.G_p;
+beta_0         = params.sim.beta_0;
+a              = params.sim.a;
+sigma_0        = params.sim.sigma_0;
+
+factor   = (P*G_p*beta_0)./(2*a*sigma_0.^2);
+func = sum(log_Pxy + factor*fraction,3);
 
 [~,idx]   = min(func(:));
-[idx,idy] = ind2sub(size(func),idx); 
+[idy,idx] = ind2sub(size(func),idx); 
 
 
 end
