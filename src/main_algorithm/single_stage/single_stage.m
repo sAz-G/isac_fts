@@ -1,33 +1,28 @@
-function [S_m, E_used_m, V_m, xi_m, delta_m] = single_stage(H,eta,E_m,N_stg,delta_square_last,w_star,K_stg,iter,mu,S_c,S_init, S_t_est,S_s, V_init)
+function [S_m, E_used_m, V_m, xi_m, delta_m] = single_stage(E_m,N_stg,delta_square_last,K_stg,S_c,S_init, S_t_est,S_s, V_init,params)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
 % parameters 
-L_x   = 1500;
-L_y   = 1500;
-V_max = 30;
+L_x   = params.sim.L_x;
+L_y   = params.sim.L_y;
+V_max = params.sim.V_max;
 
-T_f = 1.5;
-T_h = 1;
+v_0 = params.energy.v_0;
 
-s = 0.05; 
-A = 0.503;
-rho = 1.225;
-D_0 = 0.6;
-U_tip = 120;
-P_0  = 80;
-P_I  = 88.6;
+B = params.sim.B;
+R_max = 1; %1e06*log(1 + (db2pow(20)*1e-3*db2pow(-50))./(sqrt(1e06*db2pow(-170) * 1e-3)*H.^2));
 
-v_0 = 4.03;
-
-B = 1e06;
-R_max = 1;% 1e06*log(1 + (db2pow(20)*1e-3*db2pow(-50))./(sqrt(1e06*db2pow(-170) * 1e-3)*H.^2));
+iter    = params.sim.iter;
+mu      = params.sim.mu;
+H       = params.sim.H;
+eta     = params.sim.eta;
+w_star  = params.sim.w_star;
 
 for u = 1:iter
 % Calculation of the CRB
-S_hover = S_init(:, mu:mu:N_stg);
-S_hover_x = S_init(1,mu:mu:N_stg);
-S_hover_y = S_init(2,mu:mu:N_stg);
+S_hover     = S_init(:, mu:mu:N_stg);
+S_hover_x   = S_init(1,mu:mu:N_stg);
+S_hover_y   = S_init(2,mu:mu:N_stg);
 
 % Derivative with respect to x
 derivatex_CRB = compute_gradient_x(S_hover, S_t_est, H, K_stg);
@@ -49,8 +44,9 @@ cvx_begin
     variable V(2,N_stg)
     variable delta(1,N_stg)
     variable xi(1,N_stg)
-
- 
+    
+    
+    
     %x_opt = S(1,mu:mu:N_tot); % optimization variable
 
     CRB_derivate_x_km = sum(derivatex_CRB .* (S(1,mu:mu:N_stg) - S_hover_x)); % vectorized
@@ -69,10 +65,10 @@ cvx_begin
 
     %% Objective function
     % minimization
-    minimize(eta * CRB_affine - (1 - eta) * R_affine./R_max);
+    minimize(eta * CRB_affine - (1 - eta) * R_affine);
 
     %% Conditions
-    E_used = calc_energy(K_stg,P_I,P_0,V,U_tip,D_0,rho,s, A,delta,T_f,T_h);
+    E_used = calc_energy(K_stg,V,delta, params);
     
     subject to
         E_m >= E_used;%T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3;
@@ -84,14 +80,17 @@ cvx_begin
         L_x >= S(1,:);
         L_y >= S(2,:);
         xi >= 0;
-        
+        %R_affine <= R_max;
+        if u == 1
+            xi == delta_square_last;
+        end
         for k = 1:N_stg-1
             %if k == 1
             %     V(k) == (S(:,k)-S_s)./T_f;
             %else
             %     V(:,k) == (S(:,k)-S(:,k-1))./T_f;
             %end
-            norm(S(:,k+1) - S(:,k)) <= V_max*T_f;
+            norm(S(:,k+1) - S(:,k)) <= V_max*params.sim.T_f;
            
         end
         
