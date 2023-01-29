@@ -1,4 +1,4 @@
-function [idx, idy] = get_min(D_est,x_t,y_t,x_jt,y_jt,H ,params)
+function [idx, idy] = get_min(D_est,x_t,y_t,x_jt,y_jt,params)
 % get_min(est, params) is the function, for which we want to find the
 % minimum(objective function (of)).
 % 
@@ -30,7 +30,7 @@ Y_t        = repmat(Y_t, [1,1,yj_dim]);
 D_mat_est  = ones(x_dim,y_dim, length(D_est));
 Y_jt       = ones(x_dim,y_dim,yj_dim);
 X_jt       = ones(x_dim,y_dim,xj_dim);
-H_mat      = ones(x_dim,y_dim, length(D_est)).*H;
+H_mat      = ones(x_dim,y_dim, length(D_est)).*params.sim.H;
 
 for k = 1:length(D_est)
     D_mat_est(:,:,k) = D_est(k);
