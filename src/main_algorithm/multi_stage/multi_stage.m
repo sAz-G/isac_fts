@@ -10,8 +10,10 @@ addpath(genpath("..\..\..\src"));
 %% Simulation parameter
 
 run("call_hyperParam.m")
-eta = .5; 
-mu  = 5; 
+
+
+eta = params.sim.eta; 
+mu  = params.sim.mu; 
 M = 5;
 N_tot = 80;
 N_stg = 25;
@@ -42,13 +44,12 @@ S_mid = (S_c + S_target_est)/2;
 
 plot_map(S_init, S_s, S_t, S_target_est, S_c);
 
-%% Multi-stage approach for UWV trajectory design - First stage
 
 
 
 %% Optimization
-w_star = 0.2;
-iter = 5;
+w_star  = params.sim.w_star;
+iter    = params.sim.iter;
 S_opt_mat = nan(2,N_stg,M);
 m = 1;
 
@@ -67,7 +68,7 @@ delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*v_0^4)) - norms(V_init, 2
 xi_init = delta_square_init;
 
 % run the mth stag
-[S_opt_m,E_m_used] = single_stage(H,eta, E_m, N_stg, delta_square_init,w_star, K_stg,iter, mu,S_c, S_init,S_target_est,S_s,V_init);
+[S_opt_m,E_m_used] = single_stage(E_m, N_stg, delta_square_init,K_stg, S_c, S_init,S_target_est,S_s,V_init,params);
 
 for k = 1:K_stg
 D_meas(k,m) = sense_target(S_t, S_opt_m(:,k*mu));
@@ -75,9 +76,10 @@ end
 
 % get the new estimated target
 [x_t,y_t] = grid_vectors(1500,1500,1000,1000);
-[x_t_idx,y_t_idx]  = get_min(D_meas(:,m),x_t,y_t,S_opt_m(1, mu:mu:N_stg),S_opt_m(2, mu:mu:N_stg), H);
 
-S_target_est = [x_t(y_t_idx), y_t(x_t_idx)]; 
+[x_t_idx,y_t_idx]  = get_min(D_meas(:,m),x_t,y_t,S_opt_m(1, mu:mu:N_stg),S_opt_m(2, mu:mu:N_stg), H,params);
+
+S_target_est = [x_t(x_t_idx), y_t(y_t_idx)]; 
 % calculate the energy 
 E_m = E_m - E_m_used; 
 
