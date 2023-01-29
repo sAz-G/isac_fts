@@ -1,4 +1,4 @@
-function [S_init, V_init] = init_trajectory(s_start, N_m, s_mid, V_str, T_f)
+function [S_init, V_init] = init_trajectory(s_start, s_mid,N_m, params)
 %INIT_TRAJECTORY computes the initial trajectory for the iterative process
 % arguments: 
 % s_start - starting point, the point at which the quad starts.
@@ -12,6 +12,9 @@ function [S_init, V_init] = init_trajectory(s_start, N_m, s_mid, V_str, T_f)
 % output:
 % S_init  - the initial trajectory.
 % V_out   - the velocity throughout the trajectory.
+
+V_str = params.sim.V_str;
+T_f   = params.sim.T_f;
 
 S_init = zeros(2,N_m);
 V_init  = ones(2,N_m).*V_str.*(s_mid - s_start)./norm(s_mid - s_start);
