@@ -68,10 +68,10 @@ cvx_begin
     minimize(eta * CRB_affine - (1 - eta) * R_affine);
 
     %% Conditions
-    E_used = calc_energy(K_stg,V,delta, params);
+    E_used_constraint = calc_constraint_energy(K_stg,V,delta, params);
     
     subject to
-        E_m >= E_used;%T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3;
+        E_m >= E_used_constraint;%T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3;
         V_max >= norms(V, 2, 1);
         delta >= 0;
         S(:,1) == S_s;
@@ -105,12 +105,13 @@ cvx_end
 
 S_init = S_init + w_star.*(S-S_init);
 %S_init = S;
+
 V_init = V;
 delta_square_last = delta.^2;
 end
 
 S_m = S_init;
-E_used_m = E_used;
+E_used_m = calc_real_energy(K_stg, V, params);
 V_m = V;
 xi_m = xi;
 delta_m = delta;
