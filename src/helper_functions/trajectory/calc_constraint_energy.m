@@ -1,4 +1,4 @@
-function E_used = calc_energy(K_stg,V,delta,params)
+function E_used = calc_constraint_energy(K_stg,V,delta,params)
 % calc_energy calculates the energy, given the previous energy, and the
 % energy used in each stage, which is predefined.
 % Arguments: 
