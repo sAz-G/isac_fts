@@ -1,9 +1,12 @@
-function gradient_rate_x_out = compute_rate(S_traj_in, S_c, H_in, N_in)
+function gradient_rate_x_out = compute_rate(S_traj_in, S_c, H_in, N_in, params)
 %COMPUTE_GRADIENT Summary of this function goes here
 %   Detailed explanation goes here
 
-    % import the constant parameters
-    run("call_hyperParam.m")
+    % import the constant parameters,
+    alpha_0 = params.sim.alpha_0;
+    P = params.sim.P;
+    sigma_0 = params.sim.sigma_0;
+    B = params.sim.B;
     
     d_c = compute_dc(S_traj_in, S_c, H_in, N_in);
     
