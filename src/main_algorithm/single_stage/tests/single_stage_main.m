@@ -10,6 +10,9 @@ addpath(genpath(".\rate_functions"));
 % import the constant parameters
 run("call_hyperParam.m")
 
+addpath(genpath("..\..\..\src"));
+run("call_hyperParam.m")
+
 eta = 1; 
 mu  = 5; %
 
