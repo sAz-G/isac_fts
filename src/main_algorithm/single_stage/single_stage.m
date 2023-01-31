@@ -1,4 +1,4 @@
-function [S_m, E_used_m, V_m, xi_m, delta_m] = single_stage(E_m,N_stg,delta_square_last,K_stg,s_c,S_init, s_t_est,S_s, V_init,params)
+function [S_m, E_used_m, V_m, xi_m, delta_m, CRB_opt, R_opt] = single_stage(E_m,N_stg,delta_square_last,K_stg,s_c,S_init, s_t_est,S_s, V_init,params)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -17,6 +17,9 @@ mu      = params.sim.mu;
 H       = params.sim.H;
 eta     = params.sim.eta;
 w_star  = params.sim.w_star;
+
+CRB_opt = nan(1,iter);
+R_opt   = nan(1,iter);
 
 for u = 1:iter
 % Calculation of the CRB
@@ -106,10 +109,12 @@ cvx_begin
 cvx_end
 
 S_init = S_init + w_star.*(S-S_init);
-%S_init = S;
 
 V_init = V;
 delta_square_last = delta.^2;
+
+R_opt(u)    = R_affine;
+CRB_opt(u)  = CRB_affine;
 end
 
 S_m = S_init;
