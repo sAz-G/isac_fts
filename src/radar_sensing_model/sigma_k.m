@@ -6,5 +6,5 @@ function sig_k = sigma_k(d_s)
     G_p      = 0.1 * B;     % signal processing gain [Hz]
     a = 10; % pre-determined constant related to the system setting
 
-    sig_k = (a*sigma_0^2)./(P*G_p*g_k(d_s));
+    sig_k = (a.*sigma_0^2)./(P.*G_p.*g_k(d_s));
 end
