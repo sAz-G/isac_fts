@@ -11,7 +11,6 @@ addpath(genpath("..\..\..\src"));
 
 run("call_hyperParam.m")
 
-
 eta = params.sim.eta; 
 mu  = params.sim.mu; 
 M = 5;
@@ -21,13 +20,14 @@ K_stg = floor(N_stg/mu);
 K_tot = floor(N_tot/mu);
 
 % Energy parameters
-E_total = 40e3; % [J]
+E_total = 30e3; % [J]
 E_m = E_total;
-E_min = 5e3;
+E_min = calc_real_energy(K_stg, params.sim.V_max*ones(1,N_stg), params);
 
 %% Simulation Setup
 % Basestation
-S_s = [100; 100];
+S_b = [100; 100];
+S_s = S_b;
 % Communication user
 S_c = [1.3e3; 1.2e3];
 % Sensing target
@@ -42,15 +42,14 @@ S_mid = (S_c + S_target_est)/2;
 % Inital trajectory
 [S_init, V_init] = init_trajectory(S_s, S_mid,N_stg, params);
 
-plot_map(S_init, S_s, S_t, S_target_est, S_c);
-
-
-
+plot_map(S_init, S_s, S_t, S_target_est, S_c,params);
 
 %% Optimization
 w_star  = params.sim.w_star;
 iter    = params.sim.iter;
 S_opt_mat = nan(2,N_stg,M);
+S_init_mat = nan(2,N_stg,M);
+
 m = 1;
 
 D_meas = nan(K_stg,M);
@@ -67,30 +66,31 @@ S_mid = (S_c + S_target_est)/2;
 delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4)) - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
 xi_init = delta_square_init;
 
-% run the mth stag
+% run the mth stage
 [S_opt_m,E_m_used] = single_stage(E_m, N_stg, delta_square_init,K_stg, S_c, S_init,S_target_est,S_s,V_init,params);
 
-for k = 1:K_stg
-D_meas(k,m) = sense_target(S_t, S_opt_m(:,k*mu));
-end
+D_meas(:,m) = sense_target(S_t, S_opt_m(:,mu:mu:end));
 
 % get the new estimated target
 [x_t,y_t] = grid_vectors(1500,1500,1000,1000);
 
 [x_t_idx,y_t_idx]  = get_min(D_meas(:,m),x_t,y_t,S_opt_m(1, mu:mu:N_stg),S_opt_m(2, mu:mu:N_stg),params);
 
-S_target_est = [x_t(x_t_idx), y_t(y_t_idx)]; 
-% calculate the energy 
-E_m = E_m - E_m_used; 
-
+S_target_est = [x_t(x_t_idx); y_t(y_t_idx)]; 
 % store calculated trajectory 
 S_opt_mat(:,1:size(S_opt_m,2), m) = S_opt_m;
-
+S_init_mat(:,1:size(S_opt_m,2), m) = S_init;
+% set new starting point
+S_s = S_opt_m(:,end);
+% calculate the energy 
+E_m = E_m - E_m_used; 
+E_min = calc_back_energy(S_opt_m(:,end), S_b, params);
 % increase the iteration variable
 m = m+1;
+
 
 end
 
 % last stage here
-plot_map(S_opt_m, S_s, S_t, S_target_est, S_c);
+plot_map(S_opt_mat, S_s, S_t, S_target_est, S_c,params);
 
