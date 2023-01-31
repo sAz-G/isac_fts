@@ -14,10 +14,10 @@ run("call_hyperParam.m")
 eta = params.sim.eta; 
 mu  = params.sim.mu; 
 M = 5;
-N_tot = 80;
+N_tot = nan;
 N_stg = 25;
 K_stg = floor(N_stg/mu);
-K_tot = floor(N_tot/mu);
+K_tot = nan;
 
 % Energy parameters
 E_total = 30e3; % [J]
@@ -42,17 +42,26 @@ S_mid = (S_c + S_target_est)/2;
 % Inital trajectory
 [S_init, V_init] = init_trajectory(S_s, S_mid,N_stg, params);
 
-plot_map(S_init, S_s, S_t, S_target_est, S_c,params);
+plot_map(S_init, S_b, S_t, S_target_est, S_c,params);
 
 %% Optimization
 w_star  = params.sim.w_star;
 iter    = params.sim.iter;
-S_opt_mat = nan(2,N_stg,M);
-S_init_mat = nan(2,N_stg,M);
 
 m = 1;
 
-D_meas = nan(K_stg,M);
+D_meas           = nan(K_stg,M);
+S_opt_mat        = nan(2,N_stg,M);
+S_init_mat       = nan(2,N_stg,M);
+S_target_est_mat = nan(2,M);
+E_min_vec        = nan(M,1);
+E_m_vec          = nan(M,1);
+E_used_vec       = nan(M,1);
+V_m_mat          = nan(2,N_stg,M);
+xi_m_vec         = nan(N_stg,1,M);
+delta_m_vec      = nan(N_stg,1,M);
+R_opt_vecs       = nan(params.sim.iter, 1, M);
+CRB_opt_vecs     = nan(params.sim.iter, 1, M);
 
 while E_min < E_m
 
@@ -67,30 +76,48 @@ delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4)) - n
 xi_init = delta_square_init;
 
 % run the mth stage
-[S_opt_m,E_m_used] = single_stage(E_m, N_stg, delta_square_init,K_stg, S_c, S_init,S_target_est,S_s,V_init,params);
+[S_opt_m,E_m_used, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = single_stage(E_m, N_stg, delta_square_init,K_stg, S_c, S_init,S_target_est,S_s,V_init,params);
 
 D_meas(:,m) = sense_target(S_t, S_opt_m(:,mu:mu:end));
+
+% store calculated trajectory 
+S_opt_mat(:,1:size(S_opt_m,2), m) = S_opt_m;
 
 % get the new estimated target
 [x_t,y_t] = grid_vectors(1500,1500,1000,1000);
 
-[x_t_idx,y_t_idx]  = get_min(D_meas(:,m),x_t,y_t,S_opt_m(1, mu:mu:N_stg),S_opt_m(2, mu:mu:N_stg),params);
-
+[x_t_idx,y_t_idx]  = get_min(D_meas(1:K_stg*m),x_t,y_t,reshape(S_opt_mat(1, mu:mu:end,1:m),1,m*K_stg), ...
+                                                       reshape(S_opt_mat(2, mu:mu:end,1:m),1,m*K_stg),params);
+                                                
 S_target_est = [x_t(x_t_idx); y_t(y_t_idx)]; 
-% store calculated trajectory 
-S_opt_mat(:,1:size(S_opt_m,2), m) = S_opt_m;
+
 S_init_mat(:,1:size(S_opt_m,2), m) = S_init;
 % set new starting point
 S_s = S_opt_m(:,end);
+
 % calculate the energy 
 E_m = E_m - E_m_used; 
 E_min = calc_back_energy(S_opt_m(:,end), S_b, params);
+
+%store variables
+E_used_vec(m)           = E_m_used;
+E_m_vec(m)              = E_m;
+S_target_est_mat(:,m)   = S_target_est;
+V_m_mat(:,:,m)          = V_m;
+delta_m_vec(:,:,m)      = delta_m;
+xi_m_vec(:,:,m)         = xi_m;
+CRB_opt_vecs(:,:,m)     = CRB_vec_m;
+R_opt_vecs(:,:,m)       = R_vec_m;
+
 % increase the iteration variable
 m = m+1;
 
-
 end
 
+M = m-1;
+N_tot = size(S_opt_mat,2)*size(S_opt_mat,3);
+K_tot = floor(N_tot/mu);
+
 % last stage here
-plot_map(S_opt_mat, S_s, S_t, S_target_est, S_c,params);
+plot_map(S_opt_mat, S_b, S_t, S_target_est, S_c,params);
 
