@@ -1,4 +1,4 @@
-function [p_s, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c)
+function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c, varargin)
 %PLOT_MAP plots the map for a given trajectory and base station, target and
 %communication user position.
 % arguments: 
@@ -8,7 +8,13 @@ function [p_s, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c)
 % s_c - communication user position.
 
 % map 
-    figure
+    
+    params = [];
+    if ~isempty(varargin)
+        params = varargin{1};
+    end
+    
+    fig = figure;
     hold on
     grid on
     
@@ -19,6 +25,15 @@ function [p_s, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c)
     p_s.LineStyle = 'none';
     p_s.MarkerEdgeColor = 'b';
     
+    % plot hovering
+    mu = params.sim.mu;
+    p_h = plot(S(1,mu:mu:end), S(2,mu:mu:end));
+    p_h.LineStyle = 'none';
+    p_h.Marker = 'o';
+    p_h.LineStyle = 'none';
+    p_h.MarkerEdgeColor = 'b';    
+    p_h.MarkerFaceColor = 'k';
+
     % plot base station 
     p_b = plot(s_b(1), s_b(2));
     p_b.LineStyle = 'none';
@@ -50,7 +65,14 @@ function [p_s, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c)
     p_c.MarkerFaceColor = 'c';
     p_c.MarkerEdgeColor = 'c';
     
-    legend('S', 's_b', 's_t','s_{est}', 's_c')
+    l = legend('S', 'S_h','s_b', 's_t','s_{est}', 's_c');
+    l.Location = 'southeast';
+    
+    if isempty(params)
+        create_title(gca);
+    else
+        create_title(gca, params);
+    end
     
 end
 
