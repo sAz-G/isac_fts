@@ -32,7 +32,7 @@ if sv == 1
     
     if ~sfx
         mkdir(pth+folder_name);
-        folder_name = name;
+        folder_name = pth+folder_name;
     else
         name = pth+folder_name;
         while exist(name, 'dir')
