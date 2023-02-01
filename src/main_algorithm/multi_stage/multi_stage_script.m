@@ -11,11 +11,10 @@ addpath(genpath("..\..\..\src"));
 
 run("call_hyperParam.m")
 
-eta = params.sim.eta; 
 mu  = params.sim.mu; 
 M = 5;
 N_tot = nan;
-N_stg = 25;
+N_stg = params.sim.N_stg;
 K_stg = floor(N_stg/mu);
 K_tot = nan;
 
@@ -45,9 +44,6 @@ S_mid = (S_c + S_target_est)/2;
 plot_map(S_init, S_b, S_t, S_target_est, S_c,params);
 
 %% Optimization
-w_star  = params.sim.w_star;
-iter    = params.sim.iter;
-
 m = 1;
 
 D_meas           = nan(K_stg,M);
@@ -73,7 +69,6 @@ S_mid = (S_c + S_target_est)/2;
 
 % calc initial values of parametes
 delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4)) - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
-xi_init = delta_square_init;
 
 % run the mth stage
 [S_opt_m,E_m_used, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = single_stage(E_m, N_stg, delta_square_init,K_stg, S_c, S_init,S_target_est,S_s,V_init,params);
@@ -102,6 +97,7 @@ E_min = calc_back_energy(S_opt_m(:,end), S_b, params);
 %store variables
 E_used_vec(m)           = E_m_used;
 E_m_vec(m)              = E_m;
+E_min_vec(m)            = E_min;
 S_target_est_mat(:,m)   = S_target_est;
 V_m_mat(:,:,m)          = V_m;
 delta_m_vec(:,:,m)      = delta_m;
