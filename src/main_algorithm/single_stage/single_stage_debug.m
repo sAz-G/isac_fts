@@ -11,6 +11,7 @@ v_0 = params.energy.v_0;
 
 B = params.sim.B;
 R_max = 1; %1e06*log(1 + (db2pow(20)*1e-3*db2pow(-50))./(sqrt(1e06*db2pow(-170) * 1e-3)*H.^2));
+T_f = params.sim.T_f;
 
 iter    = params.sim.iter;
 mu      = params.sim.mu;
@@ -47,8 +48,6 @@ derivatex_rate = compute_gradient_rate_x(S_init, s_c, H, N_stg,params);
 % Derivative with respect to y
 derivatey_rate = compute_gradient_rate_y(S_init, s_c, H, N_stg, params);
 
-%y_opt = S(2,mu:mu:N_tot); % optimization variable
-
 cvx_begin
     cvx_solver mosek
     cvx_precision high
@@ -58,9 +57,15 @@ cvx_begin
     variable delta(1,N_stg)
     variable xi(1,N_stg)
     
-    
-    
-    %x_opt = S(1,mu:mu:N_tot); % optimization variable
+%     expression V(2,N_stg)
+% 
+%     for k = 1:N_stg
+%         if k == 1
+%              V(:,k) = (S(:,k) - S_s)./T_f;
+%         else
+%              V(:,k) = (S(:,k) - S(:,k-1))./T_f;
+%         end
+%     end
 
     CRB_derivate_x_km = sum(derivatex_CRB .* (S(1,mu:mu:N_stg) - S_hover_x)); % vectorized
     CRB_derivate_y_km = sum(derivatey_CRB .* (S(2,mu:mu:N_stg) - S_hover_y)); % vectorized
@@ -70,7 +75,6 @@ cvx_begin
 
     % Average Communication Rate
     R_derivate_x = sum(derivatex_rate .* (S(1,:) - S_init(1,:))); % vectorized
-    
     R_derivate_y = sum(derivatey_rate .* (S(2,:) -  S_init(2,:))); % vectorized
 
     R_affine =  R_derivate_x + R_derivate_y;
@@ -84,12 +88,15 @@ cvx_begin
     E_used_constraint = calc_constraint_energy(K_stg,V,delta, params);
     
     subject to
-        E_m >= E_used_constraint;%T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3;
+        E_m >= E_used_constraint; %T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3;
+        
         V_max >= norms(V, 2, 1);
         delta >= 0;
+        
         S(:,1) == S_s;
         S(1,:) >= 0;
         S(2,:) >= 0;
+
         L_x >= S(1,:);
         L_y >= S(2,:);
         xi >= 0;
@@ -106,7 +113,7 @@ cvx_begin
             norm(S(:,k+1) - S(:,k)) <= V_max*params.sim.T_f;
            
         end
-        
+
         for i = 1:N_stg
             
             norm(V_init(:, i))^2 / v_0^2 + 2/v_0^2 * V_init(:, i).' * (V(:,i) - V_init(:,i)) >= 1/delta_square_last(i) - xi(i);

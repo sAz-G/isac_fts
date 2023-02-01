@@ -43,13 +43,11 @@ S_mid = (S_c + S_target_est)/2;
 % Inital trajectory
 [S_init, V_init] = init_trajectory(S_s, S_mid,N_stg, params);
 
-plot_map(S_init, S_b, S_t, S_target_est, S_c, params);
-
 %% Optimization
 m = 1;
 
-iter = 5;
-params.sim.iter = 5;
+iter = 10;
+params.sim.iter = iter;
 
 D_meas           = nan(K_stg,M);
 S_opt_mat        = nan(2,N_stg,M);
@@ -71,6 +69,8 @@ S_mid = (S_c + S_target_est)/2;
 
 % Inital trajectory
 [S_init, V_init] = init_trajectory(S_s, S_mid, N_stg, params);
+
+plot_map(S_init, S_b, S_t, S_target_est, S_c, params);
 
 % calc initial values of parametes
 delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4)) - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);

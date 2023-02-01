@@ -13,39 +13,45 @@ title("UAV trajectory over the iterations")
 xlabel("x in m")
 ylabel("y in m")
 hold on;
+grid on;
 
 subplot(4, 2, 2);
 title("Mean velocity over the iterations")
 xlabel("iterations")
 ylabel("Mean velocity")
 hold on;
+grid on;
 
 subplot(4, 2, 3);
 title("Mean of delta over the iterations")
 xlabel("iterations")
 ylabel("Mean delta")
 hold on;
+grid on;
 
 subplot(4, 2, 4);
 title("Mean of xi over the iterations")
 xlabel("iterations")
 hold on;
+grid on;
 xlabel("iterations")
 ylabel("Mean xi")
 
 subplot(4, 2, [5, 6]);
-title("Mean of xi over the iterations")
+title("Difference between delta^2 and xi")
 xlabel("iterations")
 hold on;
+grid on;
 xlabel("iterations")
 ylabel("Difference between delta^2 and xis")
 
 subplot(4, 2, [7, 8]);
-title("Difference between delta^2 and xi")
+title("Velocity in S and V")
 xlabel("iterations")
 hold on;
+grid on;
 xlabel("iterations")
-ylabel("Mean xi")
+ylabel("S an V")
 
 for i = 1:iter
     subplot(4, 2, 1);
