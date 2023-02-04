@@ -58,23 +58,28 @@ for i = 1:iter
     plot(debug_S(1,:,i), debug_S(2,:,i));
 
     subplot(4, 2, 2);
-    plot(i, mean(norms(debug_V(:,:,i), 2, 1)), "o");
+    plot(i, mean(norms(debug_V(:,:,i), 2, 1)), "ob");
 
     subplot(4, 2, 3);
-    plot(i, mean(debug_delta(:,:,i)), "o");
+    plot(i, mean(debug_delta(:,:,i)), "ob");
 
     subplot(4, 2, 4);
-    plot(i, mean(debug_xi(:,:,i)), "o");
+    plot(i, mean(debug_xi(:,:,i)), "ob");
 
     subplot(4, 2, [5, 6]);
     hold on;
-    plot(i, mean(abs(debug_xi(:,:,i) - debug_delta(:,:,i).^2)), "o")
+    plot(i, mean(abs(debug_xi(:,:,i) - debug_delta(:,:,i).^2)), "ob")
     
     subplot(4, 2, [7, 8]);
     hold on;
     plot(i, mean(norms([diff(debug_S(1,:,1)); diff(debug_S(2,:,1))]./T_f, 2, 1)), "ob");
     plot(i, mean(norms(debug_V(:,2:end,1), 2, 1)), "or");
-
+    
+    
 end
+subplot(4, 2, [7, 8]);
+hold on;
+legend("V from S", "V from V")
+
 end
 
