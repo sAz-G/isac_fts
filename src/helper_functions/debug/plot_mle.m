@@ -13,9 +13,11 @@ func_range = [min(func(:)), min(func(:)) * 1e2];
 imagesc(x_range, y_range, func, func_range);
 set(gca,'YDir','normal')
 
+xlabel("x in m")
+ylabel("y in m")
+
 hold on;
 plot(idx * params.sim.L_x/length(func(:,1)), idy * params.sim.L_y/length(func(1,:)), "*r");
-colormap
 
 title("MLE (minimum) of the position of the target");
 

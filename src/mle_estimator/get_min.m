@@ -57,7 +57,9 @@ func = sum(log_Pxy + factor*fraction,3);
 
 [~,idx]   = min(func(:));
 [idy,idx] = ind2sub(size(func),idx); 
+
 plot_mle(func, params);
+plot_pdf(X_t, Y_t, X_jt, Y_jt, H_mat, D_mat_est, params);
 
 end
 
