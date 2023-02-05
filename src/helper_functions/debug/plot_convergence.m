@@ -55,8 +55,12 @@ ylabel("S an V")
 
 for i = 1:iter
     subplot(4, 2, 1);
-    plot(debug_S(1,:,i), debug_S(2,:,i));
-
+    if i ~= iter
+        plot(debug_S(1,:,i), debug_S(2,:,i), "k");
+    else
+        plot(debug_S(1,:,i), debug_S(2,:,i), "r");
+    end
+    
     subplot(4, 2, 2);
     plot(i, mean(norms(debug_V(:,:,i), 2, 1)), "ob");
 

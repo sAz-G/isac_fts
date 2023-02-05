@@ -20,9 +20,8 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
     
     % plot trajectory 
     p_s = plot(S(1,:), S(2,:));
-    p_s.LineStyle = 'none';
+%     p_s.LineStyle = 'none';
     p_s.Marker = 'o';
-    p_s.LineStyle = 'none';
     p_s.MarkerEdgeColor = 'b';
 
     % plot base station 
