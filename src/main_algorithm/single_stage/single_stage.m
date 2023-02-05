@@ -28,10 +28,10 @@ S_hover_x   = S_init(1,mu:mu:N_stg);
 S_hover_y   = S_init(2,mu:mu:N_stg);
 
 % Derivative with respect to x
-derivatex_CRB = compute_gradient_x(S_hover, s_t_est, H, K_stg, params);
+derivatex_CRB = compute_gradient_crb_x(S_hover, s_t_est, H, K_stg, params);
 
 % Derivative with respect to y
-derivatey_CRB = compute_gradient_y(S_hover, s_t_est, H, K_stg, params);
+derivatey_CRB = compute_gradient_crb_y(S_hover, s_t_est, H, K_stg, params);
 
 % Derivative with respect to x
 derivatex_rate = compute_gradient_rate_x(S_init, s_c, H, N_stg,params);
@@ -118,7 +118,7 @@ CRB_opt(u)  = CRB_affine;
 end
 
 S_m = S_init;
-E_used_m = calc_real_energy(K_stg, V, params);
+E_used_m = calc_real_energy(S_m, V, params);
 V_m = V;
 xi_m = xi;
 delta_m = delta;

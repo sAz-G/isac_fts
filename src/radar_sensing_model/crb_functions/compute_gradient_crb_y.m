@@ -1,4 +1,4 @@
-function gradient_y = compute_gradient_y(S_hov, s_target_est, H, K_stg, params)
+function gradient_y = compute_gradient_crb_y(S_hov, s_target_est, H, K_stg, params)
 %COMPUTE_GRADIENT_Y Summary of this function goes here
 %   Detailed explanation goes here
 
