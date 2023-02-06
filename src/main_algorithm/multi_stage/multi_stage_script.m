@@ -11,6 +11,8 @@ addpath(genpath("..\..\..\src"));
 
 run("call_hyperParam.m")
 
+params.sim.iter = 20;
+params.sim.eta = 0.5;
 
 mu  = params.sim.mu; 
 M = 5;
@@ -31,16 +33,10 @@ S_s = S_b;
 % Communication user
 S_c = [1.3e3; 1.2e3];
 % Sensing target
-S_t = [750; 750];
+S_t = [200; 1.3e3];
 
 % estimate the target randomly 
-S_target_est = [1000; 100]; %S_t + [100; -100];
-
-% Middle point between communication user und target user
-S_mid = (S_c + S_target_est)/2;
-
-% Inital trajectory
-[S_init, V_init] = init_trajectory(S_s, S_mid,N_stg, params);
+S_target_est = S_t + [100; -100];
 
 %% Optimization
 m = 1;
@@ -61,8 +57,9 @@ CRB_opt_vecs     = nan(params.sim.iter, 1, M);
 while E_min < E_m
 
 % Middle point between communication user und target user
-%S_mid = (S_c + S_target_est)/2;
-S_mid = S_target_est*params.sim.eta + S_c*(1-params.sim.eta);
+S_mid = (S_c + S_target_est)/2;
+% S_mid = S_target_est*params.sim.eta + S_c*(1-params.sim.eta);
+
 % Inital trajectory
 [S_init, V_init] = init_trajectory(S_s, S_mid, N_stg, params);
 
@@ -76,13 +73,16 @@ debug_mode = true;
 if debug_mode == false
     [S_opt_m,E_m_used, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = single_stage(E_m, N_stg, delta_square_init,K_stg, S_c, S_init,S_target_est,S_s,V_init,params);
 else
-    [S_opt_m,E_m_used, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = single_stage_debug(E_m, N_stg, delta_square_init, K_stg, S_c, S_init, S_target_est, S_s, V_init, m,params);
+    [S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = single_stage_debug(E_m, N_stg, delta_square_init, K_stg, S_c, S_init, S_target_est, S_s, V_init, m,params);
 end
 
 D_meas(:,m) = sense_target(S_t, S_opt_m(:,mu:mu:end), params);
 
 % store calculated trajectory 
 S_opt_mat(:,1:size(S_opt_m,2), m) = S_opt_m;
+
+V_froms_S = calc_velocity_from_trajectory(S_opt_m, S_s, params);
+E_m_used = calc_real_energy(K_stg, V_froms_S, params);
 
 % get the new estimated target
 [x_t,y_t] = grid_vectors(1500,1500,1000,1000);
