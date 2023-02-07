@@ -1,4 +1,4 @@
-function E_used = calc_real_energy(K_stg, V, params)
+function E_used = calc_real_energy(K_stg, S, S_s, params)
     % calc_energy calculates the energy, given the previous energy, and the
     % energy used in each stage, which is predefined.
     % Arguments: 
@@ -19,7 +19,9 @@ function E_used = calc_real_energy(K_stg, V, params)
     
     T_f = params.sim.T_f;
     T_h = params.sim.T_h;
-    V_abs = norms(V, 2, 1);
+
+    V_froms_S = calc_velocity_from_trajectory(S, S_s, params);
+    V_abs = norms(V_froms_S, 2, 1);
     
     Energy_abs_vec = P_enery(V_abs);
     Energy_zero_vec = P_enery(zeros(1, K_stg));

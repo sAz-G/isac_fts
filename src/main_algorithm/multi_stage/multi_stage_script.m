@@ -20,11 +20,6 @@ N_stg = params.sim.N_stg;
 K_stg = floor(N_stg/mu);
 K_tot = nan;
 
-% Energy parameters
-E_total = 30e3; % [J]
-E_m = E_total;
-E_min = calc_real_energy(K_stg, params.sim.V_max*ones(1,N_stg), params);
-
 %% Simulation Setup
 % Basestation
 S_b = [100; 100];
@@ -36,6 +31,12 @@ S_t = [200; 1.3e3];
 
 % estimate the target randomly 
 S_target_est = S_t + [100; -100];
+
+% Energy parameters
+E_total = 30e3; % [J]
+E_m = E_total;
+S_max_end = S_b + [1/sqrt(2) * params.sim.T_f * params.sim.V_max * N_stg; 1/sqrt(2) * params.sim.T_f * params.sim.V_max * N_stg];
+E_min = calc_back_energy(S_max_end, S_b, params);
 
 %% Optimization
 m = 1;
@@ -60,7 +61,7 @@ epsilon = params.sim.eta;
 if params.sim.eta
     epsilon = 0.99;
 end
-S_mid = S_target_est*params.sim.eta + S_c*(1-params.sim.eta);
+S_mid = S_target_est*epsilon + S_c*(1-epsilon);
 
 % Inital trajectory
 [S_init, V_init] = init_trajectory(S_s, S_mid, N_stg, params);
@@ -73,7 +74,7 @@ delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4)) - n
 % run the mth stage
 debug_mode = true;
 if debug_mode == false
-    [S_opt_m,E_m_used, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = single_stage(E_m, N_stg, delta_square_init,K_stg, S_c, S_init,S_target_est,S_s,V_init,params);
+    [S_opt_m, E_m_used, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = single_stage(E_m, N_stg, delta_square_init,K_stg, S_c, S_init,S_target_est,S_s,V_init,params);
 else
     [S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = single_stage_debug(E_m, N_stg, delta_square_init, K_stg, S_c, S_init, S_target_est, S_s, V_init, m,params);
 end
@@ -83,8 +84,7 @@ D_meas(:,m) = sense_target(S_t, S_opt_m(:,mu:mu:end), params);
 % store calculated trajectory 
 S_opt_mat(:,1:size(S_opt_m,2), m) = S_opt_m;
 
-V_froms_S = calc_velocity_from_trajectory(S_opt_m, S_s, params);
-E_m_used = calc_real_energy(K_stg, V_froms_S, params);
+E_m_used = calc_real_energy(K_stg, S_opt_m, S_s, params);
 
 % get the new estimated target
 [x_t,y_t] = grid_vectors(1500,1500,1000,1000);
