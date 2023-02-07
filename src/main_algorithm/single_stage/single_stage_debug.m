@@ -96,7 +96,7 @@ cvx_begin
     %% Conditions
     E_used_constraint = calc_constraint_energy(K_stg,V,delta, params);
     
-    subject to+
+    subject to
         E_m >= E_used_constraint; %T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3;
         
         V_max >= norms(V, 2, 1);
@@ -111,6 +111,7 @@ cvx_begin
         L_x >= S(1,:);
         L_y >= S(2,:);
         xi >= 0;
+
         %R_affine <= R_max;
         if u == 1
             xi == delta_square_last;
@@ -127,7 +128,7 @@ cvx_begin
 
         for i = 1:N_stg
             
-            norm(V_init(:, i))^2 / v_0^2 + 2/v_0^2 * V_init(:, i).' * (V(:,i) - V_init(:,i)) >= 1/delta_square_last(i) - xi(i);
+            norm(V_init(:, i))^2 / v_0^2 + 2/v_0^2 * V_init(:, i).' * (V(:,i) - V_init(:,i)) >= pow_pos(inv_pos(delta(i)), 2) - xi(i);
 
             delta_square_last(i) + 2 * sqrt(delta_square_last(i)) * (delta(i) - sqrt(delta_square_last(i))) >=  xi(i);
         end
