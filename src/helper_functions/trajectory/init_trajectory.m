@@ -18,11 +18,14 @@ T_f   = params.sim.T_f;
 
 S_init = zeros(2,N_m);
 V_init  = ones(2,N_m).*V_str.*(s_mid - s_start)./norm(s_mid - s_start);
-%S_init(1,:) = linspace(s_start(1),s_mid(1), N_m);
-%S_init(2,:) = linspace(s_start(2),s_mid(2), N_m);
 
 for n = 1:N_m
          % here we multiply by T_f. In the paper they dont, check that point
-         S_init(:,n) = s_start + V_str .*n .* (s_mid - s_start) ./ norm(s_mid - s_start);
+%          if n == 1
+%              V_init(:,n) = (S_init(:,n)-s_start)./params.sim.T_f;
+%          else
+%              V_init(:,n) = (S_init(:,n)-S_init(:,n-1))./params.sim.T_f;
+%          end
+         S_init(:,n) = s_start + V_str .*n .* (s_mid - s_start) ./ norm(s_mid - s_start)*T_f;
 end
 
