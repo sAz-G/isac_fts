@@ -8,11 +8,10 @@ addpath(genpath("..\..\..\src"));
 
 
 %% Simulation parameter
-
 run("call_hyperParam.m")
 
-params.sim.iter = 20;
-params.sim.eta = 0.5;
+params.sim.iter = 5;
+params.sim.eta = .7;
 
 mu  = params.sim.mu; 
 M = 5;
@@ -57,8 +56,11 @@ CRB_opt_vecs     = nan(params.sim.iter, 1, M);
 while E_min < E_m
 
 % Middle point between communication user und target user
-S_mid = (S_c + S_target_est)/2;
-% S_mid = S_target_est*params.sim.eta + S_c*(1-params.sim.eta);
+epsilon = params.sim.eta;
+if params.sim.eta
+    epsilon = 0.99;
+end
+S_mid = S_target_est*params.sim.eta + S_c*(1-params.sim.eta);
 
 % Inital trajectory
 [S_init, V_init] = init_trajectory(S_s, S_mid, N_stg, params);
