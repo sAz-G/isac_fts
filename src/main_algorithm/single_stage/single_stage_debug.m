@@ -1,4 +1,4 @@
-function [S_m, V_m, xi_m, delta_m, CRB_opt, R_opt] = single_stage_debug(E_m,N_stg,delta_square_last,K_stg,s_c,S_init_in, s_t_est,S_s, V_init, m, params)
+function [S_m, V_m, xi_m, delta_m, CRB_opt, R_opt] = single_stage_debug(E_m, N_stg, delta_square_last, K_stg, s_c, S_init_in, S_past_in, s_t_est, S_s, V_init, m, params)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 

@@ -63,9 +63,11 @@ if params.sim.eta
 end
 S_mid = S_target_est*epsilon + S_c*(1-epsilon);
 
+% Safe the past trajectory
+S_past = reshape(S_opt_mat(:,:,1:m), [2, m*N_stg]);
+
 % Inital trajectory
 [S_init, V_init] = init_trajectory(S_s, S_mid, N_stg, params);
-
 plot_map(S_init, S_b, S_t, S_target_est, S_c, params);
 
 % calc initial values of parametes
@@ -73,10 +75,11 @@ delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4)) - n
 
 % run the mth stage
 debug_mode = true;
+
 if debug_mode == false
     [S_opt_m, E_m_used, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = single_stage(E_m, N_stg, delta_square_init,K_stg, S_c, S_init,S_target_est,S_s,V_init,params);
 else
-    [S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = single_stage_debug(E_m, N_stg, delta_square_init, K_stg, S_c, S_init, S_target_est, S_s, V_init, m,params);
+    [S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = single_stage_debug(E_m, N_stg, delta_square_init, K_stg, S_c, S_init, S_past, S_target_est, S_s, V_init, m, params);
 end
 
 D_meas(:,m) = sense_target(S_t, S_opt_m(:,mu:mu:end), params);
