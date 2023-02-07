@@ -10,8 +10,8 @@ addpath(genpath("..\..\..\src"));
 %% Simulation parameter
 run("call_hyperParam.m")
 
-params.sim.iter = 5;
-params.sim.eta = .7;
+params.sim.iter = 10;
+params.sim.eta = 0.5;
 
 mu  = params.sim.mu; 
 M = 5;
@@ -65,7 +65,7 @@ while E_min < E_m
 S_mid = S_target_est*epsilon + S_c*(1-epsilon);
 
 % Safe the past trajectory
-S_past = reshape(S_opt_mat(:,:,1:m), [2, m*N_stg]);
+S_past = reshape(S_opt_mat(:,:,1:m-1), [2, (m-1)*N_stg]);
 
 % Inital trajectory
 [S_init, V_init] = init_trajectory(S_s, S_mid, N_stg, params);
