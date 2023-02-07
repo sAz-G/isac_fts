@@ -1,4 +1,4 @@
-function [S_m, V_m, xi_m, delta_m, CRB_opt, R_opt] = single_stage_debug(E_m,N_stg,delta_square_last,K_stg,s_c,S_init_in, s_t_est,S_s, V_init, m, params)
+function [S_m, V_m, xi_m, delta_m, CRB_opt, R_opt] = single_stage_debug(E_m, N_stg, delta_square_last, K_stg, s_c, S_init_in, S_past_in, s_t_est, S_s, V_init, m, params)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -37,11 +37,19 @@ S_hover     = S_init(:, mu+1:mu:N_stg+1);
 S_hover_x   = S_hover(1,:);
 S_hover_y   = S_hover(2,:);
 
+% Calc of the toal trajectory
+S_total = [S_past_in, S_init(:, 2:end)];
+
+% Calc the hover points
+S_total_mat = reshape(permute(reshape(S_total, size(S_total,1), N_stg, []), [1,3,2]), [],N_stg); % from https://stackoverflow.com/questions/40508500/how-to-dynamically-reshape-matrix-block-wise
+S_total_hover_mat = S_total_mat(:, mu:mu:N_stg);
+S_total_hover = [reshape(S_total_hover_mat(1:2:end,:)', 1, []); reshape(S_total_hover_mat(2:2:end,:)', 1, [])];
+
 % Derivative with respect to x
-derivatex_CRB = compute_gradient_crb_x(S_hover, s_t_est, H, K_stg, params);
+derivatex_CRB = compute_gradient_crb_x(S_hover, S_total_hover, s_t_est, H, K_stg, params);
 
 % Derivative with respect to y
-derivatey_CRB = compute_gradient_crb_y(S_hover, s_t_est, H, K_stg, params);
+derivatey_CRB = compute_gradient_crb_y(S_hover, S_total_hover, s_t_est, H, K_stg, params);
 
 % Derivative with respect to x
 derivatex_rate = compute_gradient_rate_x(S_init, s_c, H, N_stg+1,params);
