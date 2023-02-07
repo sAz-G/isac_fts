@@ -54,13 +54,14 @@ delta_m_vec      = nan(N_stg,1,M);
 R_opt_vecs       = nan(params.sim.iter, 1, M);
 CRB_opt_vecs     = nan(params.sim.iter, 1, M);
 
+epsilon = params.sim.eta;
+if params.sim.eta == 1
+    epsilon = 0.99;
+end
+
 while E_min < E_m
 
 % Middle point between communication user und target user
-epsilon = params.sim.eta;
-if params.sim.eta
-    epsilon = 0.99;
-end
 S_mid = S_target_est*epsilon + S_c*(1-epsilon);
 
 % Inital trajectory
