@@ -6,7 +6,7 @@ fig_conv = figure();
 iter = params.sim.iter;
 T_f = params.sim.T_f;
 
-sgtitle("Convergence of the optimization variable at Stage " + m)
+title("Convergence of the optimization variable at Stage " + m)
 
 subplot(4, 2, 1);
 title("UAV trajectory over the iterations")
