@@ -36,15 +36,11 @@ S_hover_y   = S_hover(2,:);
 % Calc of the toal trajectory
 S_total = [S_past_in, S_init(:, 2:end)];
 
-% Calc the hover points
-%S_total_mat = reshape(permute(reshape(S_total, size(S_total,1), N_stg, []), [1,3,2]), [],N_stg); % from https://stackoverflow.com/questions/40508500/how-to-dynamically-reshape-matrix-block-wise
-%S_total_hover_mat = S_total_mat(:, mu:mu:N_stg);
-%S_total_hover = [reshape(S_total_hover_mat(1:2:end,:)', 1, []); reshape(S_total_hover_mat(2:2:end,:)', 1, [])];
-
-% the modulo operator is used when N_stg/mu is not an integer. This
-% Prefarabely choose N_stg and mu to be divisible, otherwise you change
-% the optimization problem a bit.
-S_total_hover = S_total(:,mu:mu + mod(N_stg,mu):end);
+% Calc the hover points. Extract the right past points also when N_Stg/mu
+% is not an integer
+S_total_mat = reshape(permute(reshape(S_total, size(S_total,1), N_stg, []), [1,3,2]), [],N_stg); % from https://stackoverflow.com/questions/40508500/how-to-dynamically-reshape-matrix-block-wise
+S_total_hover_mat = S_total_mat(:, mu:mu:N_stg);
+S_total_hover = [reshape(S_total_hover_mat(1:2:end,:)', 1, []); reshape(S_total_hover_mat(2:2:end,:)', 1, [])];
 
 % Derivative with respect to x
 derivatex_CRB = compute_gradient_crb_x(S_hover, S_total_hover, s_t_est, H, K_stg, params);
