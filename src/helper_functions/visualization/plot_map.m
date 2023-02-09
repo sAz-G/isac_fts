@@ -5,7 +5,7 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
 % S    - quad trajectory.
 % s_b  - base station position.
 % s_t  - target position. 
-% s_c - communication user position.
+% s_c  - communication user position.
 
 % map 
     
@@ -20,9 +20,10 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
     
     % plot trajectory 
     p_s = plot(S(1,:), S(2,:));
-%     p_s.LineStyle = 'none';
     p_s.Marker = 'o';
     p_s.MarkerEdgeColor = 'b';
+    p_s.MarkerEdgeColor = 'b';
+    p_s.MarkerSize      = 2;
 
     % plot base station 
     p_b = plot(s_b(1), s_b(2));
@@ -70,8 +71,9 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
         p_h.LineStyle = 'none';
         p_h.MarkerEdgeColor = 'b';    
         p_h.MarkerFaceColor = 'k';
-        
-        l.String = {'S','s_c','s_b', 's_t','s_{est}', 'S_h'};
+        p_h.MarkerSize      = 4;
+
+        l.String = {'S','s_b','s_t', 's_{est}','s_c', 'S_h'};
         create_title(gca, params);
     end
     
