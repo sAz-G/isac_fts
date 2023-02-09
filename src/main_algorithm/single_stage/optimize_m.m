@@ -1,4 +1,4 @@
-function [S_m, E_used_m, V_m, xi_m, delta_m, CRB_opt, R_opt] = single_stage(E_m,N_stg,delta_square_last,K_stg,s_c,S_init, s_t_est,S_s, V_init,params)
+function [S_m, E_used_m, V_m, xi_m, delta_m, CRB_opt, R_opt] = optimize_m(E_m,N_stg,delta_square_last,K_stg,s_c,S_init, s_t_est,S_s, V_init,params)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 

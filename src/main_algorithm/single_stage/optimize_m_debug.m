@@ -1,4 +1,4 @@
-function [S_m, V_m, xi_m, delta_m, CRB_opt, R_opt] = single_stage_debug(E_m, N_stg, delta_square_last, K_stg, s_c, S_init_in, S_past_in, s_t_est, S_s, V_init, m, params)
+function [S_m, V_m, xi_m, delta_m, CRB_opt, R_opt] =optimize_m_debug(E_m, N_stg, delta_square_last, K_stg, s_c, S_init_in, S_past_in, s_t_est, S_s, V_init, m, params)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -8,10 +8,6 @@ L_y   = params.sim.L_y;
 V_max = params.sim.V_max;
 
 v_0 = params.energy.v_0;
-
-B = params.sim.B;
-R_max = 1; %1e06*log(1 + (db2pow(20)*1e-3*db2pow(-50))./(sqrt(1e06*db2pow(-170) * 1e-3)*H.^2));
-T_f = params.sim.T_f;
 
 iter    = params.sim.iter;
 mu      = params.sim.mu;
@@ -41,9 +37,14 @@ S_hover_y   = S_hover(2,:);
 S_total = [S_past_in, S_init(:, 2:end)];
 
 % Calc the hover points
-S_total_mat = reshape(permute(reshape(S_total, size(S_total,1), N_stg, []), [1,3,2]), [],N_stg); % from https://stackoverflow.com/questions/40508500/how-to-dynamically-reshape-matrix-block-wise
-S_total_hover_mat = S_total_mat(:, mu:mu:N_stg);
-S_total_hover = [reshape(S_total_hover_mat(1:2:end,:)', 1, []); reshape(S_total_hover_mat(2:2:end,:)', 1, [])];
+%S_total_mat = reshape(permute(reshape(S_total, size(S_total,1), N_stg, []), [1,3,2]), [],N_stg); % from https://stackoverflow.com/questions/40508500/how-to-dynamically-reshape-matrix-block-wise
+%S_total_hover_mat = S_total_mat(:, mu:mu:N_stg);
+%S_total_hover = [reshape(S_total_hover_mat(1:2:end,:)', 1, []); reshape(S_total_hover_mat(2:2:end,:)', 1, [])];
+
+% the modulo operator is used when N_stg/mu is not an integer. This
+% Prefarabely choose N_stg and mu to be divisible, otherwise you change
+% the optimization problem a bit.
+S_total_hover = S_total(:,mu:mu + mod(N_stg,mu):end);
 
 % Derivative with respect to x
 derivatex_CRB = compute_gradient_crb_x(S_hover, S_total_hover, s_t_est, H, K_stg, params);
@@ -112,7 +113,9 @@ cvx_begin
         L_y >= S(2,:);
         xi >= 0;
 
-        %R_affine <= R_max;
+        R_affine <= log(1 + (db2pow(20)*1e-3*db2pow(-50))./(sqrt(1e06*db2pow(-170) * 1e-3)*H.^2));
+        %R_affine >= log(1 + (db2pow(20)*1e-3*db2pow(-50))./(sqrt(1e06*db2pow(-170) * 1e-3)*(H.^2+ 2*1500.^2) ) );
+
         if u == 1
             xi == delta_square_last;
         end
@@ -141,7 +144,6 @@ debug_delta(:, :, u) = delta;
 debug_xi(:, :, u) = xi;
 
 S_init = S_init + w_star.*(S-S_init);
-% S_init = S;
 
 V_init = V;
 delta_square_last = delta.^2;
