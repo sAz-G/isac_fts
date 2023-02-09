@@ -1,12 +1,12 @@
-function [S_init, V_init] = init_trajectory(s_start, s_mid,N_m, params)
+function [S_init, V_init] = init_trajectory(s_start, s_end,N, params)
 %INIT_TRAJECTORY computes the initial trajectory for the iterative process
 % arguments: 
 % s_start - starting point, the point at which the quad starts.
-% N_m     - the amount of trajectory points at the mth stage.
+% N       - the amount of trajectory points at the mth stage.
 % s_mid   - the middle point between the communication user and the
 % estimated sensing target (the estimated position obtained from the
 % radar).
-% V_str   - the speed of the quad. It is constant at throughout the
+% V_str   - the speed of the quad. It is constant throughout the
 % initial trajectory.
 % T_f     - flight time between points.
 % output:
@@ -16,16 +16,8 @@ function [S_init, V_init] = init_trajectory(s_start, s_mid,N_m, params)
 V_str = params.sim.V_str;
 T_f   = params.sim.T_f;
 
-S_init = zeros(2,N_m);
-V_init  = ones(2,N_m).*V_str.*(s_mid - s_start)./norm(s_mid - s_start);
-
-for n = 1:N_m
-         % here we multiply by T_f. In the paper they dont, check that point
-%          if n == 1
-%              V_init(:,n) = (S_init(:,n)-s_start)./params.sim.T_f;
-%          else
-%              V_init(:,n) = (S_init(:,n)-S_init(:,n-1))./params.sim.T_f;
-%          end
-         S_init(:,n) = s_start + V_str .*n .* (s_mid - s_start) ./ norm(s_mid - s_start)*T_f;
+S_init = zeros(2,N);
+V_init  = ones(2,N).*V_str.*(s_end - s_start)./norm(s_end - s_start);
+S_init(:,1:N) = s_start + V_str .*(1:N).* (s_end - s_start) ./ norm(s_end - s_start)*T_f;
 end
 
