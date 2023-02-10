@@ -134,12 +134,12 @@ cvx_begin
         
 cvx_end
 
-debug_S(:, :, u) = S(:,2:end);
+S_init = S_init + w_star.*(S-S_init);
+
+debug_S(:, :, u) = S_init(:,2:end);
 debug_V(:, :, u) = V;
 debug_delta(:, :, u) = delta;
 debug_xi(:, :, u) = xi;
-
-S_init = S_init + w_star.*(S-S_init);
 
 V_init = V;
 delta_square_last = delta.^2;
