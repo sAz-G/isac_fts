@@ -134,7 +134,12 @@ cvx_begin
         
 cvx_end
 
-S_init = S_init + w_star.*(S-S_init);
+% stop updating using the step size in the last iteration 
+if u < iter
+    S_init = S_init + w_star.*(S-S_init);
+else
+    S_init = S;
+end
 
 debug_S(:, :, u) = S_init(:,2:end);
 debug_V(:, :, u) = V;
