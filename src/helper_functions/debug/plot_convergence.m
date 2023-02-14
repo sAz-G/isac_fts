@@ -85,7 +85,7 @@ subplot(4, 2, [7, 8]);
 hold on;
 legend("V from S", "V from V")
 
-sgtitle("Parameter Convergence at Stage " + m)
+title("Parameter Convergence at Stage " + m)
 
 end
 
