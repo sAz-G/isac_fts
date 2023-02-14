@@ -18,10 +18,10 @@ function [idx, idy] = get_min_gridsearch(D_est,x_t,y_t,x_jt,y_jt,params)
 % possible target coordinates.
 % D_est: The vector of estimated positions up to the current estimation.
 
-x_dim = length(x_t); % dimension in x direction of the matrices after using meshgrid
-y_dim = length(y_t); % dimension in y direction of the matrices after using meshgrid
-xj_dim = length(x_jt); % dimension in x direction of the matrices after using meshgrid
-yj_dim = length(y_jt); % dimension in y direction of the matrices after using meshgrid
+x_dim = length(x_t);    % dimension in x direction of the matrices after using meshgrid
+y_dim = length(y_t);    % dimension in y direction of the matrices after using meshgrid
+xj_dim = length(x_jt);  % dimension in x direction of the matrices after using meshgrid
+yj_dim = length(y_jt);  % dimension in y direction of the matrices after using meshgrid
 
 [X_t, Y_t] = meshgrid(x_t, y_t);
 X_t        = repmat(X_t, [1,1,xj_dim]);
