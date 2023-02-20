@@ -1,5 +1,5 @@
-function [S_m, V_m, xi_m, delta_m, CRB_opt, R_opt] =optimize_m_debug(E_m, N_stg, delta_square_last, K_stg, s_c, S_init_in, S_past_in, s_t_est, S_s, V_init, m, params)
-%UNTITLED Summary of this function goes here
+function [S_m, V_m, xi_m, delta_m, CRB_opt, R_opt] = optimize_m_debug(E_m, s_c,S_hover, S_total, delta_square_init,s_t_est,s_s, V_init, params)
+%optimize_m_debug is a a function to debug the 
 %   Detailed explanation goes here
 
 % parameters 
@@ -14,73 +14,58 @@ mu      = params.sim.mu;
 H       = params.sim.H;
 eta     = params.sim.eta;
 w_star  = params.sim.w_star;
+N_stg   = params.sim.N_stg;
+K_stg   = floor(N_stg/mu);
 
 CRB_opt = nan(1,iter);
 R_opt   = nan(1,iter);
 
 %% Debug parameter 
 
-debug_S = zeros(2, N_stg, iter);
-debug_V = zeros(2, N_stg, iter);
+debug_S     = zeros(2, N_stg, iter);
+debug_V     = zeros(2, N_stg, iter);
 debug_delta = zeros(1, N_stg, iter);
-debug_xi = zeros(1, N_stg, iter);
+debug_xi    = zeros(1, N_stg, iter);
 
-S_init = [S_s, S_init_in];
+S_init = S_total(:,end-N_stg+1:end);
 
 for u = 1:iter
-% Calculation of the CRB
-S_hover     = S_init(:, mu+1:mu:N_stg+1);
-S_hover_x   = S_hover(1,:);
-S_hover_y   = S_hover(2,:);
 
-% Calc of the toal trajectory
-S_total = [S_past_in, S_init(:, 2:end)];
+S_hover_x                           = S_init(1, mu:mu:N_stg);
+S_hover_y                           = S_init(2, mu:mu:N_stg);
 
-% Calc the hover points. Extract the right past points also when N_Stg/mu
-% is not an integer
-S_total_mat = reshape(permute(reshape(S_total, size(S_total,1), N_stg, []), [1,3,2]), [],N_stg); % from https://stackoverflow.com/questions/40508500/how-to-dynamically-reshape-matrix-block-wise
-S_total_hover_mat = S_total_mat(:, mu:mu:N_stg);
-S_total_hover = [reshape(S_total_hover_mat(1:2:end,:)', 1, []); reshape(S_total_hover_mat(2:2:end,:)', 1, [])];
+S_hover_to_visit  = [S_hover_x; S_hover_y];
+S_hover(:,end-K_stg+1:end)  = S_hover_to_visit; 
 
 % Derivative with respect to x
-derivatex_CRB = compute_gradient_crb_x(S_hover, S_total_hover, s_t_est, H, K_stg, params);
+crb_grad_x = crb_grad(S_hover, s_t_est, params, 'x'); %%%%
 
 % Derivative with respect to y
-derivatey_CRB = compute_gradient_crb_y(S_hover, S_total_hover, s_t_est, H, K_stg, params);
+crb_grad_y = crb_grad(S_hover, s_t_est, params, 'y'); %%%%
 
 % Derivative with respect to x
-derivatex_rate = compute_gradient_rate_x(S_init, s_c, H, N_stg+1,params);
+derivatex_rate = compute_gradient_rate_x(S_init, s_c, H, N_stg,params);
 
 % Derivative with respect to y
-derivatey_rate = compute_gradient_rate_y(S_init, s_c, H, N_stg+1, params);
+derivatey_rate = compute_gradient_rate_y(S_init, s_c, H, N_stg, params);
 
 cvx_begin
     cvx_solver mosek
     cvx_precision high
     
-    variable S(2,N_stg+1)
+    variable S(2,N_stg)
     variable V(2,N_stg)
     variable delta(1,N_stg)
     variable xi(1,N_stg)
     
-%     expression V(2,N_stg)
-% 
-%     for k = 1:N_stg
-%         if k == 1
-%              V(:,k) = (S(:,k) - S_s)./T_f;
-%         else
-%              V(:,k) = (S(:,k) - S(:,k-1))./T_f;
-%         end
-%     end
-
-    CRB_derivate_x_km = sum(derivatex_CRB .* (S(1,mu:mu:N_stg) - S_hover_x)); % vectorized
-    CRB_derivate_y_km = sum(derivatey_CRB .* (S(2,mu:mu:N_stg) - S_hover_y)); % vectorized
+    crb_taylor_x = sum(crb_grad_x.*(S(1,mu:mu:N_stg) - S_hover_x)); % vectorized
+    crb_taylor_y = sum(crb_grad_y.*(S(2,mu:mu:N_stg) - S_hover_y)); % vectorized
     
     % sum_up for total CRB
-    CRB_affine =  CRB_derivate_x_km + CRB_derivate_y_km;
+    CRB_affine =  crb_taylor_x + crb_taylor_y;
 
     % Average Communication Rate
-    R_derivate_x = sum(derivatex_rate .* (S(1,:) - S_init(1,:))); % vectorized
+    R_derivate_x = sum(derivatex_rate .* (S(1,:) - S_init(1,:)));  % vectorized
     R_derivate_y = sum(derivatey_rate .* (S(2,:) -  S_init(2,:))); % vectorized
 
     R_affine =  R_derivate_x + R_derivate_y;
@@ -94,65 +79,56 @@ cvx_begin
     E_used_constraint = calc_constraint_energy(K_stg,V,delta, params);
     
     subject to
-        E_m >= E_used_constraint; %T_f * Em_sum1 + T_f * Em_sum2 + T_h * Em_sum3;
-        
-        V_max >= norms(V, 2, 1);
-        delta >= 0;
-        
-        S(:,1) == S_s;
-        % V_max >= (S(:, 1) - S_s)./T_f;
-
-        S(1,:) >= 0;
-        S(2,:) >= 0;
-
-        L_x >= S(1,:);
-        L_y >= S(2,:);
-        xi >= 0;
-
+        E_m     >= E_used_constraint; 
+        V_max   >= norms(V, 2, 1);
+        delta   >= 0;
+        S(1,:)  >= 0;
+        S(2,:)  >= 0;
+        L_x     >= S(1,:);
+        L_y     >= S(2,:);
+        xi      >= 0;
         R_affine <= log(1 + (db2pow(20)*1e-3*db2pow(-50))./(sqrt(1e06*db2pow(-170) * 1e-3)*H.^2));
-        %R_affine >= log(1 + (db2pow(20)*1e-3*db2pow(-50))./(sqrt(1e06*db2pow(-170) * 1e-3)*(H.^2+ 2*1500.^2) ) );
-
-        if u == 1
-            xi == delta_square_last;
-        end
+        R_affine >= log(1 + (db2pow(20)*1e-3*db2pow(-50))./(sqrt(1e06*db2pow(-170) * 1e-3)*(H.^2+ 2*L_x.^2) ) );
+ 
         for k = 1:N_stg
-            %if k == 1
-            %     V(k) == (S(:,k)-S_s)./T_f;
-            %else
-            %     V(:,k) == (S(:,k)-S(:,k-1))./T_f;
-            %end
-            norm(S(:,k+1) - S(:,k)) <= V_max*params.sim.T_f;
-           
+            if k == 1
+                 norm(S(:,k) - s_s)     <= V_max*params.sim.T_f;
+            else
+                norm(S(:,k) - S(:,k-1)) <= V_max*params.sim.T_f;
+            end
         end
 
         for i = 1:N_stg
-            
             norm(V_init(:, i))^2 / v_0^2 + 2/v_0^2 * V_init(:, i).' * (V(:,i) - V_init(:,i)) >= pow_pos(inv_pos(delta(i)), 2) - xi(i);
-
-            delta_square_last(i) + 2 * sqrt(delta_square_last(i)) * (delta(i) - sqrt(delta_square_last(i))) >=  xi(i);
+            delta_square_init(i) + 2 * sqrt(delta_square_init(i)) * (delta(i) - sqrt(delta_square_init(i))) >=  xi(i);
         end
         
 cvx_end
 
-S_init = S_init + w_star.*(S-S_init);
+if u < iter
+    S_init = S_init + w_star.*(S-S_init);
+else
+    S_init = S;
+end
 
-debug_S(:, :, u) = S_init(:,2:end);
+V_init = V;
+delta_square_init = delta.^2;
+
+
+debug_S(:, :, u) = S_init;
 debug_V(:, :, u) = V;
 debug_delta(:, :, u) = delta;
 debug_xi(:, :, u) = xi;
-
-V_init = V;
-delta_square_last = delta.^2;
 
 R_opt(u)    = R_affine;
 CRB_opt(u)  = CRB_affine;
 end
 
-fig_conv = plot_convergence(debug_S, debug_V, debug_delta, debug_xi, S_s, m, params);
+%fig_conv    = plot_convergence(debug_S, debug_V, debug_delta, debug_xi, s_s, m, params);
 
-S_m = S_init(:, 2:end);
-V_m = V;
-xi_m = xi;
-delta_m = delta;
+S_m         = S_init;
+V_m         = V;
+xi_m        = xi;
+delta_m     = delta;
 end
 
