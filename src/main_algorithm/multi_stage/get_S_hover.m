@@ -28,7 +28,7 @@ idxs_shift          = shft_mat(:)';
 hover_idxs_linear   = [mu+(m_start-1)*K_stg*mu:mu:(m_end*K_stg*mu)];
 hover_idxs          = idxs_shift + hover_idxs_linear;
 
-if ~ isempty(S)
+if ~isempty(S)
     S_hover             = S(:,hover_idxs);
 else
     S_hover = [];
