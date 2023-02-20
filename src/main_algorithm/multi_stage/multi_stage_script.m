@@ -11,19 +11,19 @@ addpath(genpath("..\..\..\src"));
 run("call_hyperParam.m")
 
 mu  = params.sim.mu;      % measurment step. Measure sensing target every mu steps
-M = 5;                      
+M = 7;                      
 N_stg = params.sim.N_stg; % amount of flight points in every stage 
 K_stg = floor(N_stg/mu);  % amount of hovering points in every stage 
 
 %% Simulation Setup
 % Basestation
 s_b = setup.base_station_pos;        % base station position 
-s_s = s_b;               % start position of the initial trajectory (not necessary of the real trajectory)
+s_s = s_b;                           % start position of the initial trajectory (not necessary of the real trajectory)
 
 % Communication user
-s_c = setup.comm_user_pos;   % position of the communication user 
+s_c = setup.comm_user_pos;           % position of the communication user 
 % Sensing target
-s_t = setup.sense_target_pos;     % real position of the sensing target
+s_t = setup.sense_target_pos;        % real position of the sensing target
 
 % estimate the target randomly 
 s_target_est = setup.est_sense_target; % target estimation at the beginning 
@@ -57,9 +57,12 @@ if params.sim.eta == 1
     epsilon = 0.99;
 end
 
-S_total_m = [];
-while E_min < E_m
+S_total_m   = [];
+S_hover_total     = [];
 
+while E_min < E_m
+ 
+        
 % end point between communication user und target user for the initial traj
 s_end = s_target_est*epsilon + s_c*(1-epsilon);
 
@@ -70,8 +73,13 @@ s_end = s_target_est*epsilon + s_c*(1-epsilon);
 [S_init, V_init] = init_trajectory(s_s, s_end, N_stg, params);
 plot_map(S_init, s_b, s_t, s_target_est, s_c, params);
 
+% get hover points
+S_total_m = horzcat(S_total_m,S_init);
+[~,S_hover_total] = get_S_hover(params, 1, m, S_total_m);
+
 % calc initial values of parametes
-delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4)) - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
+delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
+                            - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
 
 % run the mth stage
 debug_mode = true;
@@ -79,7 +87,7 @@ debug_mode = true;
 if debug_mode == false
     [S_opt_m, E_m_used, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m(E_m, N_stg, delta_square_init,K_stg, s_c, S_init,s_target_est,s_s,V_init,params);
 else
-    [S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m_debug(E_m, N_stg, delta_square_init, K_stg, s_c, S_init, S_total_m, s_target_est, s_s, V_init, m, params);
+    [S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m_debug(E_m, s_c, S_hover_total, S_total_m,delta_square_init, s_target_est, s_s, V_init, params);
 end
 
 % sense target at each hover point 
@@ -95,8 +103,10 @@ E_m_used = calc_real_energy(K_stg, S_opt_m, s_s, params);
 [x_t,y_t] = grid_vectors(1500,1500,1000,1000); % create vectors for grid search
 
 % get the estimated target matrix index
-[x_t_idx,y_t_idx]  = get_min(D_meas(1:K_stg*m),x_t,y_t,reshape(S_opt_mat(1, mu:mu:end,1:m),1,m*K_stg), ...
-                                                       reshape(S_opt_mat(2, mu:mu:end,1:m),1,m*K_stg),params);
+[x_t_idx,y_t_idx]  = get_min(D_meas(1:K_stg*m),x_t,y_t,...
+                             reshape(S_opt_mat(1, mu:mu:end,1:m),1,m*K_stg), ...
+                             reshape(S_opt_mat(2, mu:mu:end,1:m),1,m*K_stg),...
+                             params);
                                                 
 s_target_est = [x_t(x_t_idx); y_t(y_t_idx)]; 
 
@@ -105,7 +115,7 @@ S_init_mat(:,1:size(S_opt_m,2), m) = S_init;
 s_s = S_opt_m(:,end);
 
 % Save the whole trajectory. Use a [2, (m-1)*N_stg] structure 
-S_total_m = horzcat(S_total_m, S_opt_m);
+S_total_m(:,end-N_stg+1:end) = S_opt_m;
 
 % calculate the energy 
 E_m = E_m - E_m_used; 
@@ -119,17 +129,17 @@ S_target_est_mat(:,m)   = s_target_est;
 V_m_mat(:,:,m)          = V_m;
 delta_m_vec(:,:,m)      = delta_m;
 xi_m_vec(:,:,m)         = xi_m;
-CRB_opt_vecs(:,m)     = CRB_vec_m;
-R_opt_vecs(:,m)       = R_vec_m;
+CRB_opt_vecs(:,m)       = CRB_vec_m;
+R_opt_vecs(:,m)         = R_vec_m;
 
 % increase the iteration variable
 m = m+1;
 
 end
 
-M = m-1; % amount of stages 
+M = m-1;                                     % amount of stages 
 N_tot = size(S_opt_mat,2)*size(S_opt_mat,3); % total amount of points 
-K_tot = floor(N_tot/mu); % total amount of hover points 
+K_tot = floor(N_tot/mu);                     % total amount of hover points 
 
 % last stage here
 plot_map(S_opt_mat, s_b, s_t, s_target_est, s_c,params);  % plot map 
