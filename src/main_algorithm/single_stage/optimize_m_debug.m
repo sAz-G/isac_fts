@@ -33,8 +33,8 @@ w_star  = params.sim.w_star; % step size
 N_stg   = params.sim.N_stg;  % amount of trajectory points at each stage 
 K_stg   = floor(N_stg/mu);   % amount of trajectory hover points at each stage 
 
-CRB_iter = nan(iter);       % store crb values of each iteration 
-R_iter   = nan(iter);       % store rate values of each iteration 
+CRB_iter = nan(1,iter);       % store crb values of each iteration 
+R_iter   = nan(1,iter);       % store rate values of each iteration 
 
 %% Debug parameter 
 
@@ -141,8 +141,8 @@ delta_square_init = delta.^2;   % set initial delta_square for the next iteratio
 
 S_mat(:, :, u) = S_init;      % store trajectory results of each iteration 
 V_mat(:, :, u) = V;           % store velocity results of each iteration 
-delta_mat(:, :, u) = delta;   % store detla results of each iteration 
-xi_mat(:, :, u) = xi;         % store xi results of each iteration 
+delta_mat(:, u) = delta;   % store detla results of each iteration 
+xi_mat(:, u) = xi;         % store xi results of each iteration 
 
 R_iter(u)    = R_affine;         % store rate results of each iteration 
 CRB_iter(u)  = CRB_affine;       % store crb results  of each iteration 
