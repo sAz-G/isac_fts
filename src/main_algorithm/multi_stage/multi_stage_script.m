@@ -1,14 +1,25 @@
-
+%% multi_stage_script is an etnry point for the multi stage algorithm.
+% it loads the parameters that are needed, which include the simulation
+% setup and parameters that are given in the paper. The initial values that
+% are needed for each stage are calculated and passed to the function
+% optimize_m* which optimizes the trajectory at the mth stage. 
+% All variables that are considered in the optimization process in each
+% stage are stored in matrices. These variables include the optimization
+% functions and functions and variables that are considered in the
+% constraints. Also the estimated sensing target positions obtained at each
+% stage is stored in a matrix. 
+%
+% the function multi_stage is based on this script.
 %%
 clear;
 clc;
 close all;
 
-addpath(genpath("..\..\..\src"));
+addpath(genpath("..\..\..\src")); % add all project folders to path  
 
 
 %% Simulation parameter
-run("call_hyperParam.m")
+run("call_hyperParam.m")  % load all predefined constans. script is in helper_functions
 
 mu  = params.sim.mu;      % measurment step. Measure sensing target every mu steps
 M = 7;                      
@@ -33,8 +44,8 @@ E_total = setup.total_energy;   % total amount of energy in [J]
 E_m = E_total;                  % amount of energy at the mth stage, start with E_total 
 
 % the farthest point the quad can fly to from its current position 
-s_max_end = s_s + [1/sqrt(2) * params.sim.T_f * params.sim.V_max * N_stg; 1/sqrt(2) * params.sim.T_f * params.sim.V_max * N_stg];
-E_min = calc_back_energy(s_max_end, s_b, params); % amount of energy needed to fly back to the bas statio 
+%s_max_end = s_s + [1/sqrt(2) * params.sim.T_f * params.sim.V_max * N_stg; 1/sqrt(2) * params.sim.T_f * params.sim.V_max * N_stg];
+E_min = 5e03;
 
 %% variables to save 
 m = 1;  % first stage 
@@ -42,99 +53,78 @@ D_meas           = nan(K_stg,M);                   % measurement matrix
 S_opt_mat        = nan(2,N_stg,M);                 % matrix of optimal traj. for each stage
 S_init_mat       = nan(2,N_stg,M);                 % matrix of initial trajectories
 S_target_est_mat = nan(2,M);                       % matrix of target estimations of each stage 
-E_min_vec        = nan(M,1);                       % vector that stores the minimum energy needed at each stage 
-E_m_vec          = nan(M,1);                       % store the energy availale at each stage 
-E_used_vec       = nan(M,1);                       % store the energy used at each stage 
+E_min_vec        = nan(1,M);                       % vector that stores the minimum energy needed at each stage 
+E_m_vec          = nan(1,M);                       % store the energy availale at each stage 
+E_used_vec       = nan(1,M);                       % store the energy used at each stage 
 V_m_mat          = nan(2,N_stg,M);                 % store the optimal velocity at each stage
-xi_m_vec         = nan(N_stg,1,M);                 % store the optimal xi at each stage 
-delta_m_vec      = nan(N_stg,1,M);                 % store the optimal delta at each stage
+xi_m_vec         = nan(N_stg,M);                   % store the optimal xi at each stage 
+delta_m_vec      = nan(N_stg,M);                   % store the optimal delta at each stage
 R_opt_vecs       = nan(params.sim.iter, M);        % store optimal data rate solutions 
 CRB_opt_vecs     = nan(params.sim.iter, M);        % store the optimalcrb soutions 
 
 %% Optimization
-epsilon = params.sim.eta;
-if params.sim.eta == 1
-    epsilon = 0.99;
+epsilon = params.sim.eta; % a weight for the calculation of the initial trajectory 
+if params.sim.eta == 1    
+    epsilon = 0.99; % do not set epsilon to 1. otherwise determinant of the crb can be 0.
 end
 
-S_total_m   = [];
-S_hover_total     = [];
+S_total_m   = []; % trajectory points up to the mth stage included. From now called total trajectory
 
-while E_min < E_m
+while E_min < E_m % break if the energy is not enough for additional N_stg points
  
-        
 % end point between communication user und target user for the initial traj
 s_end = s_target_est*epsilon + s_c*(1-epsilon);
 
-% Save the whole trajectory. Use a [2, (m-1)*N_stg] structure 
-%S_total_m = [S_total_m, S_opt_m]; %reshape(S_opt_mat(:,:,1:m-1), [2, (m-1)*N_stg]); % total trajectory at the mth stage
-
 % Inital trajectory
 [S_init, V_init] = init_trajectory(s_s, s_end, N_stg, params);
-plot_map(S_init, s_b, s_t, s_target_est, s_c, params);
 
+%S_total_m = horzcat(S_total_m,S_init); % concatenate N_stg points to the total trajectory
+S_opt_mat(:,:, m) = S_init;
+S_total_m         = reshape(S_opt_mat(:,:,1:m),2,N_stg.*m);
 % get hover points
-S_total_m = horzcat(S_total_m,S_init);
-[~,S_hover_total] = get_S_hover(params, 1, m, S_total_m);
+hover_idxs = get_S_hover(params, 1, m, S_total_m); % get hover points from the total traj 
 
-% calc initial values of parametes
+% calc initial value of delta square
 delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
                             - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
 
-% run the mth stage
-debug_mode = true;
-
-if debug_mode == false
-    [S_opt_m, E_m_used, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m(E_m, N_stg, delta_square_init,K_stg, s_c, S_init,s_target_est,s_s,V_init,params);
-else
-    [S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m_debug(E_m, s_c, S_hover_total, S_total_m,delta_square_init, s_target_est, s_s, V_init, params);
-end
-
-% sense target at each hover point 
-D_meas(:,m) = sense_target(s_t, S_opt_m(:,mu:mu:end), params);
+% get optimal solution
+[S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m_debug(E_m, s_c, S_total_m(:,hover_idxs), S_total_m,delta_square_init, s_target_est, s_s, V_init, params);
 
 % store calculated trajectory 
-S_opt_mat(:,1:size(S_opt_m,2), m) = S_opt_m;
+S_opt_mat(:,1:size(S_opt_m,2), m) = S_opt_m(:,:,end); % assign only final solution
 
-% calculate the used energy
-E_m_used = calc_real_energy(K_stg, S_opt_m, s_s, params);
-
-% get the new estimated target
-[x_t,y_t] = grid_vectors(1500,1500,1000,1000); % create vectors for grid search
+% sense target at each hover point 
+D_meas(:,m) = sense_target(s_t, S_opt_mat(:,mu:mu:end,m), params); % get new K_stg measurments
 
 % get the estimated target matrix index
-[x_t_idx,y_t_idx]  = get_min(D_meas(1:K_stg*m),x_t,y_t,...
-                             reshape(S_opt_mat(1, mu:mu:end,1:m),1,m*K_stg), ...
-                             reshape(S_opt_mat(2, mu:mu:end,1:m),1,m*K_stg),...
-                             params);
-                                                
-s_target_est = [x_t(x_t_idx); y_t(y_t_idx)]; 
+s_target_est  = estimate_target(S_opt_mat(:, mu:mu:end,1:m),D_meas(1:K_stg*m), params, 'gridsearch');
+                                               
+% calculate the available energy
+E_m_used = calc_real_energy(K_stg, S_opt_mat(:,:, m), s_s, params);
 
 S_init_mat(:,1:size(S_opt_m,2), m) = S_init;
+
 % set new current point
 s_s = S_opt_m(:,end);
 
-% Save the whole trajectory. Use a [2, (m-1)*N_stg] structure 
-S_total_m(:,end-N_stg+1:end) = S_opt_m;
-
 % calculate the energy 
 E_m = E_m - E_m_used; 
-E_min = calc_back_energy(S_opt_m(:,end), s_b, params);
+%E_min = calc_back_energy(S_opt_m(:,end), s_b, params);
 
 %store variables
 E_used_vec(m)           = E_m_used;
 E_m_vec(m)              = E_m;
 E_min_vec(m)            = E_min;
 S_target_est_mat(:,m)   = s_target_est;
-V_m_mat(:,:,m)          = V_m;
-delta_m_vec(:,:,m)      = delta_m;
-xi_m_vec(:,:,m)         = xi_m;
+V_m_mat(:,:,m)          = V_m(:,:,end);
+delta_m_vec(:,m)        = delta_m(:,end);
+xi_m_vec(:,m)           = xi_m(:,end);
 CRB_opt_vecs(:,m)       = CRB_vec_m;
 R_opt_vecs(:,m)         = R_vec_m;
 
 % increase the iteration variable
 m = m+1;
-
 end
 
 M = m-1;                                     % amount of stages 
