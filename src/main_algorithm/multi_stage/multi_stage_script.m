@@ -78,7 +78,6 @@ s_end = s_target_est*epsilon + s_c*(1-epsilon);
 % Inital trajectory
 [S_init, V_init] = init_trajectory(s_s, s_end, N_stg, params);
 
-%S_total_m = horzcat(S_total_m,S_init); % concatenate N_stg points to the total trajectory
 S_opt_mat(:,:, m) = S_init;
 S_total_m         = reshape(S_opt_mat(:,:,1:m),2,N_stg.*m);
 % get hover points
@@ -110,7 +109,6 @@ s_s = S_opt_m(:,end);
 
 % calculate the energy 
 E_m = E_m - E_m_used; 
-%E_min = calc_back_energy(S_opt_m(:,end), s_b, params);
 
 %store variables
 E_used_vec(m)           = E_m_used;
@@ -130,6 +128,7 @@ end
 M = m-1;                                     % amount of stages 
 N_tot = size(S_opt_mat,2)*size(S_opt_mat,3); % total amount of points 
 K_tot = floor(N_tot/mu);                     % total amount of hover points 
+
 
 % last stage here
 plot_map(S_opt_mat, s_b, s_t, s_target_est, s_c,params);  % plot map 
