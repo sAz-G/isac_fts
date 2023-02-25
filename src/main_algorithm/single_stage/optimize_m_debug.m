@@ -47,11 +47,12 @@ S_init = S_total(:,end-N_stg+1:end); % initial trajectory points. These points a
 
 for u = 1:iter  % optimization loop
 
-S_hover_x                           = S_init(1, mu:mu:N_stg); % hover points in x direction 
-S_hover_y                           = S_init(2, mu:mu:N_stg); % hover points in y direction 
+s_hover_x                           = S_init(1, mu:mu:N_stg); % hover points in x direction 
+s_hover_y                           = S_init(2, mu:mu:N_stg); % hover points in y direction 
 
-S_hover_to_visit  = [S_hover_x; S_hover_y];     % hover points that are going to be optimized 
+S_hover_to_visit  = [s_hover_x; s_hover_y];     % hover points that are going to be optimized 
 S_hover(:,end-K_stg+1:end)  = S_hover_to_visit; % assign optimized hover points to mth hover points at S_hover
+S_total(:,end-N_stg+1:end)  = S_init;
 
 % gradient of crb in x direction 
 crb_grad_x = crb_grad(S_hover, s_t, params, 'x');
@@ -60,10 +61,10 @@ crb_grad_x = crb_grad(S_hover, s_t, params, 'x');
 crb_grad_y = crb_grad(S_hover, s_t, params, 'y'); 
  
 % gradient of rate in x direction 
-rate_grad_x = compute_gradient_rate_x(S_init, s_c, H, N_stg,params);
+rate_grad_x = rate_grad(S_total, s_c, params, 'x');
 
 % gradient of rate in y direction 
-rate_grad_y = compute_gradient_rate_y(S_init, s_c, H, N_stg, params);
+rate_grad_y = rate_grad(S_total, s_c, params, 'y');
 
 cvx_begin % cvx entry point
     cvx_solver mosek    % use solver mosek
@@ -76,9 +77,9 @@ cvx_begin % cvx entry point
     variable xi(1,N_stg)    % xi (see paper)
     
     % first degree taylor series expansion of crb in x direction 
-    crb_taylor_x = sum(crb_grad_x.*(S(1,mu:mu:N_stg) - S_hover_x));
+    crb_taylor_x = sum(crb_grad_x.*(S(1,mu:mu:N_stg) - s_hover_x));
     % first degree taylor series expansion of crb in y direction
-    crb_taylor_y = sum(crb_grad_y.*(S(2,mu:mu:N_stg) - S_hover_y)); 
+    crb_taylor_y = sum(crb_grad_y.*(S(2,mu:mu:N_stg) - s_hover_y)); 
     
     % first degree taylor series expansion of crb 
     CRB_affine =  crb_taylor_x + crb_taylor_y;
@@ -94,13 +95,12 @@ cvx_begin % cvx entry point
 
     %% Objective function
     % minimization
-    minimize(eta * CRB_affine - (1 - eta) * R_affine);
+    minimize(eta.*CRB_affine-(1-eta).*R_affine);
 
     %% constraints
-    E_used_constraint = calc_constraint_energy(K_stg,V,delta, params); 
     
     subject to
-        E_m     >= E_used_constraint; % energy constraint
+        E_m     >= calc_constraint_energy(K_stg,V,delta, params); % energy constraint
         V_max   >= norms(V, 2, 1);    % velocity constraint
         delta   >= 0;                 % delta is not negative 
         xi      >= 0;                 % xi is not negative
@@ -108,8 +108,8 @@ cvx_begin % cvx entry point
         S(2,:)  >= 0;                 % all y points are not negative
         L_x     >= S(1,:);            % all x points are bounded by L_x
         L_y     >= S(2,:);            % all y points are bounded by L_y
-        %R_affine <= log(1 + (db2pow(20)*1e-3*db2pow(-50))./(sqrt(1e06*db2pow(-170) * 1e-3)*H.^2));
-        %R_affine >= log(1 + (db2pow(20)*1e-3*db2pow(-50))./(sqrt(1e06*db2pow(-170) * 1e-3)*(H.^2+ 2*L_x.^2) ) );
+        R_affine <= log2(1 + (db2pow(20)*1e-3*db2pow(-50))./(sqrt(1e06*db2pow(-170) * 1e-3)*H.^2));
+        %R_affine >= log2(1 + (db2pow(20)*1e-3*db2pow(-50))./(sqrt(1e06*db2pow(-170) * 1e-3)*(H.^2+ 2*L_x.^2) ) );
  
         for k = 1:N_stg % bound distance between trajectory points 
             if k == 1
