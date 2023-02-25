@@ -8,6 +8,7 @@ function E_used = calc_real_energy(K_stg, S, S_s, params)
     % Returns: 
     % E_new is the new energy state
     
+    % enrgy parameters 
     s     = params.energy.s; 
     A     = params.energy.A;
     rho   = params.energy.rho;
@@ -17,18 +18,18 @@ function E_used = calc_real_energy(K_stg, S, S_s, params)
     P_0   = params.energy.P_0;
     P_I   = params.energy.P_I;
     
-    T_f = params.sim.T_f;
-    T_h = params.sim.T_h;
+    T_f = params.sim.T_f; % flight time
+    T_h = params.sim.T_h; % hover time 
 
-    V_froms_S = calc_velocity_from_trajectory(S, S_s, params);
-    V_abs = norms(V_froms_S, 2, 1);
+    V = calc_velocity(S, S_s, params);
+    V_norm = norms(V, 2, 1);
     
-    Energy_abs_vec = P_enery(V_abs);
-    Energy_zero_vec = P_enery(zeros(1, K_stg));
-    E_used = T_f * sum(Energy_abs_vec) + T_h * sum(Energy_zero_vec);
+    flight_power = power_model(V_norm);
+    hover_power  = power_model(zeros(1, K_stg));
+    E_used       = T_f * sum(flight_power) + T_h * sum(hover_power);
 
-    function out_P = P_enery(V_abs_in)
-        out_P = P_0 * (1 + 3*V_abs_in.^2/U_tip^2) + P_I * sqrt(sqrt(1 + V_abs_in.^4/(4*v_0^4)) - V_abs_in.^2/(2*v_0^2)) + 1/2 * D_0 * rho * s * A * V_abs_in.^2;
+    function P = power_model(V_norm)
+        P = P_0 * (1 + 3*V_norm.^2/U_tip^2) + P_I * sqrt(sqrt(1 + V_norm.^4/(4*v_0^4)) - V_norm.^2/(2*v_0^2)) + 1/2 * D_0 * rho * s * A * V_norm.^2;
     end
 end
 
