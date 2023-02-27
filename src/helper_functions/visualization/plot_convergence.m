@@ -1,4 +1,4 @@
-function fig_conv = plot_convergence(debug_S, debug_V, debug_delta, debug_xi, S_s, m, params)
+function fig_conv = plot_convergence(S, V, delta, xi, m, params)
 %PLOT_CONVERGENCE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -56,28 +56,28 @@ ylabel("S an V")
 for i = 1:iter
     subplot(4, 2, 1);
     if i ~= iter
-        plot(debug_S(1,:,i), debug_S(2,:,i), "k");
+        plot(S(1,:,i), S(2,:,i), "k");
     else
-        plot(debug_S(1,:,i), debug_S(2,:,i), "r");
+        plot(S(1,:,i), S(2,:,i), "r");
     end
     
     subplot(4, 2, 2);
-    plot(i, mean(norms(debug_V(:,:,i), 2, 1)), "ob");
+    plot(i, mean(norms(V(:,:,i), 2, 1)), "ob");
 
     subplot(4, 2, 3);
-    plot(i, mean(debug_delta(:,:,i)), "ob");
+    plot(i, mean(delta(:,:,i)), "ob");
 
     subplot(4, 2, 4);
-    plot(i, mean(debug_xi(:,:,i)), "ob");
+    plot(i, mean(xi(:,:,i)), "ob");
 
     subplot(4, 2, [5, 6]);
     hold on;
-    plot(i, mean(abs(debug_xi(:,:,i) - debug_delta(:,:,i).^2)), "ob")
+    plot(i, mean(abs(xi(:,:,i) - delta(:,:,i).^2)), "ob")
     
     subplot(4, 2, [7, 8]);
     hold on;
-    plot(i, mean(norms([diff(debug_S(1,:,1)); diff(debug_S(2,:,1))]./T_f, 2, 1)), "ob");
-    plot(i, mean(norms(debug_V(:,2:end,1), 2, 1)), "or");
+    plot(i, mean(norms([diff(S(1,:,1)); diff(S(2,:,1))]./T_f, 2, 1)), "ob");
+    plot(i, mean(norms(V(:,2:end,1), 2, 1)), "or");
     
     
 end
