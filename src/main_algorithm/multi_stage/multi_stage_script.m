@@ -24,7 +24,7 @@ run("call_hyperParam.m")  % load all predefined constans. script is in helper_fu
 mu  = params.sim.mu;      % measurment step. Measure sensing target every mu steps
 M = 7;                      
 N_stg = params.sim.N_stg; % amount of flight points in every stage 
-K_stg = floor(N_stg/mu);  % amount of hovering points in every stage 
+K_stg = params.sim.K_stg;  % amount of hovering points in every stage 
 
 %% Simulation Setup
 % Basestation
@@ -44,7 +44,6 @@ E_total = setup.total_energy;   % total amount of energy in [J]
 E_m = E_total;                  % amount of energy at the mth stage, start with E_total 
 
 % the farthest point the quad can fly to from its current position 
-%s_max_end = s_s + [1/sqrt(2) * params.sim.T_f * params.sim.V_max * N_stg; 1/sqrt(2) * params.sim.T_f * params.sim.V_max * N_stg];
 E_min = 5e03;
 
 %% variables to save 
@@ -80,6 +79,7 @@ s_end = s_target_est*epsilon + s_c*(1-epsilon);
 
 S_opt_mat(:,:, m) = S_init;
 S_total_m         = reshape(S_opt_mat(:,:,1:m),2,N_stg.*m);
+
 % get hover points
 hover_idxs = get_S_hover(params, 1, m, S_total_m); % get hover points from the total traj 
 
@@ -91,7 +91,7 @@ delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
 [S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m_debug(E_m, s_c, S_total_m(:,hover_idxs), S_total_m,delta_square_init, s_target_est, s_s, V_init, params);
 
 % store calculated trajectory 
-S_opt_mat(:,1:size(S_opt_m,2), m) = S_opt_m(:,:,end); % assign only final solution
+S_opt_mat(:,:, m) = S_opt_m(:,:,end); % assign only final solution
 
 % sense target at each hover point 
 D_meas(:,m) = sense_target(s_t, S_opt_mat(:,mu:mu:end,m), params); % get new K_stg measurments
@@ -100,9 +100,7 @@ D_meas(:,m) = sense_target(s_t, S_opt_mat(:,mu:mu:end,m), params); % get new K_s
 s_target_est  = estimate_target(S_opt_mat(:, mu:mu:end,1:m),D_meas(1:K_stg*m), params, 'gridsearch');
                                                
 % calculate the available energy
-E_m_used = calc_real_energy(K_stg, S_opt_mat(:,:, m), s_s, params);
-
-S_init_mat(:,1:size(S_opt_m,2), m) = S_init;
+E_m_used = calc_real_energy(S_opt_mat(:,:, m), s_s, params);
 
 % set new current point
 s_s = S_opt_m(:,end);
@@ -114,6 +112,7 @@ E_m = E_m - E_m_used;
 E_used_vec(m)           = E_m_used;
 E_m_vec(m)              = E_m;
 E_min_vec(m)            = E_min;
+S_init_mat(:,1:N_stg, m) = S_init;
 S_target_est_mat(:,m)   = s_target_est;
 V_m_mat(:,:,m)          = V_m(:,:,end);
 delta_m_vec(:,m)        = delta_m(:,end);
