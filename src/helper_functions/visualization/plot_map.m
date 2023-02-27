@@ -40,7 +40,7 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
     p_t.MarkerEdgeColor = 'r';
     
     % plot estimated target position 
-    p_t_hat = plot(s_t_est(1), s_t_est(2));
+    p_t_hat = plot(s_t_est(1,:), s_t_est(2,:));
     p_t_hat.LineStyle = 'none';
     p_t_hat.LineWidth = 1.1;
     p_t_hat.Marker = 'diamond';
