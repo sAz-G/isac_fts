@@ -44,7 +44,7 @@ E_total = setup.total_energy;   % total amount of energy in [J]
 E_m = E_total;                  % amount of energy at the mth stage, start with E_total 
 
 % the farthest point the quad can fly to from its current position 
-E_min = 5e03;
+E_min = 7e03;
 
 %% variables to save 
 m = 1;  % first stage 
@@ -75,7 +75,7 @@ while E_min < E_m % break if the energy is not enough for additional N_stg point
 s_end = s_target_est*epsilon + s_c*(1-epsilon);
 
 % Inital trajectory
-[S_init, V_init] = init_trajectory(s_s, s_end, N_stg, params);
+S_init = init_trajectory(s_s, s_end, N_stg, params);
 
 S_opt_mat(:,:, m) = S_init;
 S_total_m         = reshape(S_opt_mat(:,:,1:m),2,N_stg.*m);
@@ -83,12 +83,9 @@ S_total_m         = reshape(S_opt_mat(:,:,1:m),2,N_stg.*m);
 % get hover points
 hover_idxs = get_S_hover(params, 1, m, S_total_m); % get hover points from the total traj 
 
-% calc initial value of delta square
-delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
-                            - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
-
 % get optimal solution
-[S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m_debug(E_m, s_c, S_total_m(:,hover_idxs), S_total_m,delta_square_init, s_target_est, s_s, V_init, params);
+[S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m(E_m, s_c, S_total_m(:,hover_idxs), S_total_m, s_target_est, s_s, params);
+%[S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m_debug(E_m, s_c, S_total_m(:,hover_idxs), S_total_m, s_target_est, s_s, params);
 
 % store calculated trajectory 
 S_opt_mat(:,:, m) = S_opt_m(:,:,end); % assign only final solution
@@ -103,7 +100,7 @@ s_target_est  = estimate_target(S_opt_mat(:, mu:mu:end,1:m),D_meas(1:K_stg*m), p
 E_m_used = calc_real_energy(S_opt_mat(:,:, m), s_s, params);
 
 % set new current point
-s_s = S_opt_m(:,end);
+s_s = S_opt_m(:,end,end);
 
 % calculate the energy 
 E_m = E_m - E_m_used; 
@@ -130,5 +127,5 @@ K_tot = floor(N_tot/mu);                     % total amount of hover points
 
 
 % last stage here
-plot_map(S_opt_mat, s_b, s_t, s_target_est, s_c,params);  % plot map 
+plot_map(S_opt_mat, s_b, s_t, S_target_est_mat, s_c,params);  % plot map 
 
