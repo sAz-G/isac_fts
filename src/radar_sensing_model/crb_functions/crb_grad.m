@@ -8,8 +8,8 @@ fisher_c = fisher_mat_entry(S,s_t,'theta_c',params);
 
 fisher_determinant  = fisher_a.*fisher_b - fisher_c.^2;
 
-K_stg       = floor(params.sim.N_stg./params.sim.mu);
-S_grad    = S(:,end-K_stg+1:end);
+K_stg       = params.sim.K_stg;   % amount of hover points 
+S_grad    = S(:,end-K_stg+1:end); % trajectory points for which we want to calc the gradient
 
 fisher_a_grad_dim = fisher_entry_gradient(S_grad,s_t,'theta_a', dimension,params);
 fisher_b_grad_dim = fisher_entry_gradient(S_grad,s_t,'theta_b', dimension,params);

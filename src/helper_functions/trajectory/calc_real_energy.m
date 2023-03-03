@@ -1,4 +1,4 @@
-function E_used = calc_real_energy(S, S_s, params)
+function E_used = calc_real_energy(S, s_s, params)
     % calc_energy calculates the energy, given the previous energy, and the
     % energy used in each stage, which is predefined.
     % Arguments: 
@@ -20,9 +20,9 @@ function E_used = calc_real_energy(S, S_s, params)
     
     T_f = params.sim.T_f; % flight time
     T_h = params.sim.T_h; % hover time 
-    K_stg = floor(params.sim.N_stg/params.sim.mu);
+    K_stg = params.sim.K_stg;
     
-    V = calc_velocity(S, S_s, params);
+    V = calc_velocity(S, s_s, params);
     V_norm = norms(V, 2, 1);
     
     flight_power = power_model(V_norm);
