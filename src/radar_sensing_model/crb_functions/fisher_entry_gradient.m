@@ -22,10 +22,10 @@ if strcmp(type, 'theta_a')
 
     if     strcmp(direction, 'x')
         grad = factor_CRB.*(2.*rel_pos_x.*relative_dist_vec.^2-6.*rel_pos_x.^3)./relative_dist_vec.^8+ ...
-               (16.*rel_pos_x.*relative_dist_vec.^2-24.*rel_pos_x.^3)./relative_dist_vec.^6;
+               (16.*rel_pos_x.*relative_dist_vec.^2-32.*rel_pos_x.^3)./relative_dist_vec.^6;
     elseif strcmp(direction, 'y')
-        grad = rel_pos_y.*rel_pos_x.^2.*(24./relative_dist_vec.^6 ...
-                                        -6.*factor_CRB./relative_dist_vec.^8);
+        grad = -rel_pos_y.*rel_pos_x.^2.*(32./relative_dist_vec.^6 ...
+                                        +6.*factor_CRB./relative_dist_vec.^8);
     end
 elseif  strcmp(type, 'theta_b')
 
@@ -52,8 +52,8 @@ function grad_c = c_entry_grad(S_hov, s_t, relative_dist_vec,direction,factor_CR
             re_pos_y = S_hov(1,:) - s_t(1);    
             re_pos_x = S_hov(2,:) - s_t(2);   
     end
-    grad_c = re_pos_y./(relative_dist_vec.^6).*(8.*relative_dist_vec.^2 - 24.*re_pos_x.^2 ...
-                                                 +factor_CRB./relative_dist_vec.^2.*(relative_dist_vec.^2-6.*re_pos_x.^2));
+    grad_c = re_pos_y.*(factor_CRB./(relative_dist_vec.^6)+8./(relative_dist_vec.^4));
+      grad_c = grad_c - re_pos_x.^2.*re_pos_y.*(6*factor_CRB./(relative_dist_vec.^8)+32./(relative_dist_vec.^6));
 end
 
 end
