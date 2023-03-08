@@ -13,7 +13,7 @@ function grad_rate_dim = rate_grad(S,s_c,params,dim,N)
 P              = params.sim.P;
 sigma_0        = params.sim.sigma_0;
 alpha_0        = params.sim.alpha_0;
-B              = params.sim.B;
+B              = 1;%params.sim.B;
 
 rel_dist       = user_quad_distance(S, s_c, params.sim.H);
 snr_const = (P.*alpha_0)./(sigma_0.^2);
