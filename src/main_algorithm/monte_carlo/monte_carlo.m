@@ -12,7 +12,8 @@ for mc_iter = 1:number_mc_iterations
     
     % run the multi_stage algorithm for a random setup
     res = multi_stage(params, setup);
-    CRB_mc(mc_iter) = res.CRB_opt_vecs(end, end);
+    
+    CRB_mc(mc_iter) = min(res.CRB_opt_vecs(:, res.M));
 end
 
 results_mc = struct('CRB_avg', {mean(CRB_mc)});
