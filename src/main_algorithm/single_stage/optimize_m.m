@@ -38,7 +38,11 @@ V_init(:,1)       = (S_init(:,1)-s_s)./params.sim.T_f;
 V_init(:,2:end)   = (S_init(:,2:end)-S_init(:,1:end-1))./params.sim.T_f;
 delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
                         - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
-                    
+
+S_init_valid = S_init;
+S_valid      = S_init*1.1; % initial value for the valid solution. used only in case of nan in the first iteration  
+N_nan        = 0;             % amount of consecutive nan solutions
+   
 for u = 1:iter  % optimization loop
 
 % assign optimized hover points and then optimized trajectory
@@ -60,10 +64,31 @@ rate_grad_y = rate_grad(S_total(:,end-N_stg+1:end), s_c, params, 'y',size(S_tota
 % boundary values for the rate function 
 %R_max = rate_boundary(s_s,s_c,size(S_total,2),params, 'max');
 %R_min = rate_boundary(s_s,s_c,size(S_total,2),params, 'min');
-
 cvx_begin % cvx entry point
-    cvx_solver mosek    % use solver mosek
-    cvx_precision high  
+    if strcmp(params.opt_settings.solver, 'mosek')
+        cvx_solver mosek         % use solver mosek
+    elseif strcmp(params.opt_settings.solver, 'sedumi')
+            cvx_solver sedumi    % use solver sedumi
+    elseif strcmp(params.opt_settings.solver, 'sdpt3')
+            cvx_solver sdpt3     % use solver sdpt3
+    end
+
+    % set the precision of the chosen solver
+    if strcmp(params.opt_settings.precision, 'low')
+            cvx_precision low  
+    elseif strcmp(params.opt_settings.precision, 'medium')
+            cvx_precision medium  
+    elseif strcmp(params.opt_settings.precision, 'high')
+            cvx_precision high  
+    elseif strcmp(params.opt_settings.precision, 'best')
+            cvx_precision best
+    else
+            cvx_precision default  
+    end
+
+    if ~params.opt_settings.screen_out
+        cvx_quiet true
+    end
     
     % optimization variables
     variable S(2,N_stg)     % trajectory 
@@ -90,7 +115,11 @@ cvx_begin % cvx entry point
 
     %% Objective function
     % minimization
-    minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor);
+    if strcmp(params.opt_settings.obj, 'abs')
+        minimize(abs(eta.*(CRB_taylor)-(1-eta).*R_taylor));
+    else
+        minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor);
+    end
     %% constraints
     
     subject to
@@ -110,34 +139,55 @@ cvx_begin % cvx entry point
            (norm(V_init(:, i))./v_0).^2 + (2./v_0.^2).*V_init(:, i).'*(V(:,i)-V_init(:,i)) >= pow_pos(inv_pos(delta(i)), 2)-xi(i);
            delta_square_init(i) + 2.*sqrt(delta_square_init(i)).*(delta(i) - sqrt(delta_square_init(i))) >=  xi(i);
         end
-        
 cvx_end % end of cvx calculations 
 
-% still have to check what to do if the cvx result is nan or inf
-
-if ~isnan(S)
+% handle solution
+if isnan(cvx_optval) %|| isinf(cvx_optval)% handle nan solutions, set new starting point and override invalid solutions with old ones
+    S      = S_valid;            % use the last valid solution, override current solution 
+    S_init = S_init_valid;       % use the last S_init which led to a valid solution 
+    N_nan  = N_nan +1;
     if u < iter % set an initial trajectory for the next iteration  
+        %S_init            = S_init + ((1-w_star).^(N_nan)).*(S-S_init); % choose a point far away from the last initial point
+        S_init            = S_init + (0.97.^(N_nan.^N_nan)).*(S-S_init); % start search from 0.97 to 0 to find a point that leads to a valid solution
+
+        V_init(:,1)       = (S_init(:,1)-s_s)./params.sim.T_f;
+        V_init(:,2:end)   = (S_init(:,2:end)-S_init(:,1:end-1))./params.sim.T_f;
+        delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
+                                - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
+    else % if nan solution and last iteration, assign last valid solutions
+        break; % stop optimizing if reached last iteration
+    end
+else % if the solution is valid (not nan)
+    N_nan = 0; % set this to 0 everytime the program provides a valid solution
+    %store valid optimal solution in buffers. These are used only if in the
+    %next iteration the algo provides nan solution 
+    S_valid         = S;
+    S_init_valid    = S_init; 
+    V_valid         = V;
+    delta_opt_valid = delta;
+    xi_valid        = xi;
+    R_opt_valid     = R_taylor;
+    CRB_opt_valid   = CRB_taylor;
+    
+    if (u < iter) && (~( abs(cvx_optval) < params.opt_settings.threshold)) % set an initial trajectory for the next iteration  
         S_init            = S_init + w_star.*(S-S_init);
         V_init(:,1)       = (S_init(:,1)-s_s)./params.sim.T_f;
         V_init(:,2:end)   = (S_init(:,2:end)-S_init(:,1:end-1))./params.sim.T_f;
         delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
                                 - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
-    else % set S_init to the cvx result at the last iteration 
-        S_init = S;
+    else
+        break; % stop optimizing
     end
-    % return output variables. assign here because cvx might result in nan
-    % or inf
-    S_opt = S;      % store trajectory results of each iteration 
-    V_opt = V;           % store velocity results of each iteration 
-    delta_opt = delta;   % store detla results of each iteration 
-    xi_opt = xi;         % store xi results of each iteration 
-    R_opt    = R_taylor;         % store rate results of each iteration 
-    CRB_opt  = CRB_taylor;       % store crb results  of each iteration 
-else
-    return;
-end % end of if ~isnan(S)
+    
+end % end of if isnan(cvx_optval)
 end % end of for loop and optimization
 
+S_opt       = S_valid;      % store trajectory results of each iteration 
+V_opt       = V_valid;           % store velocity results of each iteration 
+delta_opt   = delta_opt_valid;   % store detla results of each iteration 
+xi_opt      = xi_valid;         % store xi results of each iteration 
+R_opt       = R_opt_valid;         % store rate results of each iteration 
+CRB_opt     = CRB_opt_valid;       % store crb results  of each iteration 
 
 end
 
