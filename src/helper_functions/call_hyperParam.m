@@ -1,3 +1,8 @@
 
 % import the constant parameters
-run("..\..\hyperParam.m")
+
+if ispc
+    run("..\..\hyperParam.m")
+elseif isunix
+    run("../../hyperParam.m")
+end 

@@ -3,7 +3,11 @@ clear;
 clc;
 close all;
 
-addpath(genpath("..\..\..\src"));
+if ispc
+    addpath(genpath("..\..\..\src"));
+elseif isunix
+    addpath(genpath("../../../src"));
+end 
 
 % set rng to default
 
@@ -46,7 +50,7 @@ semilogy(energy_vec, CRB_over_energy)
 grid on
 
 xlabel("total energy")
-title("MC-Simulation CRB iter=10 eta=1.0")
+title("MC-Simulation CRB iter=10 eta=0.5")
 ylabel("avg. CRB")
 
 yyaxis right
