@@ -65,9 +65,7 @@ end
 
 S_total_m   = []; % trajectory points up to the mth stage included. From now called total trajectory
 
-fprintf('       Stage: ');
 while E_min < E_m % break if the energy is not enough for additional N_stg points
-    fprintf('%d, ', m);
     
     % end point between communication user und target user for the initial traj
     s_end = s_target_est*epsilon + s_c*(1-epsilon);
@@ -118,7 +116,6 @@ while E_min < E_m % break if the energy is not enough for additional N_stg point
     % increase the iteration variable
     m = m+1;
 end
-fprintf('\n');
 
 M = m-1;   
 

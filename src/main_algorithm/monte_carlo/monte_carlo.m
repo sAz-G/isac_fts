@@ -4,12 +4,15 @@ function results_mc = monte_carlo(params, setup, number_mc_iterations)
 CRB_mc = zeros(1, number_mc_iterations);
 Rate_mc = zeros(1, number_mc_iterations);
 
+p = gcp('nocreate');
+
 tic
 %% Do the main Monte-Carlo-Simulation
 parfor mc_iter = 1:number_mc_iterations
     setup_local = setup;
     params_local = params;
     fprintf('   Monte-Carlo: n = %.f/%.f\n', mc_iter, number_mc_iterations);
+
     % generate random communication and sensing target
     setup_local.comm_user_pos = [params_local.sim.L_x * rand(1); params_local.sim.L_y * rand(1)];
     setup_local.sense_target_pos = [params_local.sim.L_x * rand(1); params_local.sim.L_y * rand(1)];
@@ -30,8 +33,9 @@ parfor mc_iter = 1:number_mc_iterations
     CRB_mc(mc_iter) = crb(mc_hover_traj, setup_local.sense_target_pos, params);
     Rate_mc(mc_iter) = avg_data_rate(mc_traj, setup_local.comm_user_pos, params, number_setpoints);
 end
-toc
+mc_runtime = toc;
 
 results_mc = struct('CRB_avg', {mean(CRB_mc)}, ...
-                    'Rate_avg', {mean(Rate_mc)});
+                    'Rate_avg', {mean(Rate_mc)}, ...
+                    'Runtime_avg', {mc_runtime/number_mc_iterations});
 end
