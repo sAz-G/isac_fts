@@ -65,57 +65,60 @@ end
 
 S_total_m   = []; % trajectory points up to the mth stage included. From now called total trajectory
 
+fprintf('       Stage: ');
 while E_min < E_m % break if the energy is not enough for additional N_stg points
- 
-% end point between communication user und target user for the initial traj
-s_end = s_target_est*epsilon + s_c*(1-epsilon);
-
-% Inital trajectory
-S_init = init_trajectory(s_s, s_end, N_stg, params);
-
-S_opt_mat(:,:, m) = S_init;
-S_total_m         = reshape(S_opt_mat(:,:,1:m),2,N_stg.*m);
-
-% get hover points
-hover_idxs = get_S_hover(params, 1, m, S_total_m); % get hover points from the total traj 
-
-% get optimal solution
-[S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m(E_m, s_c, S_total_m(:,hover_idxs), S_total_m, s_target_est, s_s, params);
-%[S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m_debug(E_m, s_c, S_total_m(:,hover_idxs), S_total_m, s_target_est, s_s, params);
-
-% store calculated trajectory 
-S_opt_mat(:,:, m) = S_opt_m(:,:,end); % assign only final solution
-
-% sense target at each hover point 
-D_meas(:,m) = sense_target(s_t, S_opt_mat(:,mu:mu:end,m), params); % get new K_stg measurments
-
-% get the estimated target matrix index
-s_target_est  = estimate_target(S_opt_mat(:, mu:mu:end,1:m),D_meas(1:K_stg*m), params, 'gridsearch');
-                                               
-% calculate the available energy
-E_m_used = calc_real_energy(S_opt_mat(:,:, m), s_s, params);
-
-% set new current point
-s_s = S_opt_m(:,end,end);
-
-% calculate the energy 
-E_m = E_m - E_m_used; 
-
-% store variables
-E_used_vec(m)           = E_m_used;
-E_m_vec(m)              = E_m;
-E_min_vec(m)            = E_min;
-S_init_mat(:,1:N_stg, m) = S_init;
-S_target_est_mat(:,m)   = s_target_est;
-V_m_mat(:,:,m)          = V_m(:,:,end);
-delta_m_vec(:,m)        = delta_m(:,end);
-xi_m_vec(:,m)           = xi_m(:,end);
-CRB_opt_vecs(:,m)       = CRB_vec_m;
-R_opt_vecs(:,m)         = R_vec_m;
-
-% increase the iteration variable
-m = m+1;
+    fprintf('%d, ', m);
+    
+    % end point between communication user und target user for the initial traj
+    s_end = s_target_est*epsilon + s_c*(1-epsilon);
+    
+    % Inital trajectory
+    S_init = init_trajectory(s_s, s_end, N_stg, params);
+    
+    S_opt_mat(:,:, m) = S_init;
+    S_total_m         = reshape(S_opt_mat(:,:,1:m),2,N_stg.*m);
+    
+    % get hover points
+    hover_idxs = get_S_hover(params, 1, m, S_total_m); % get hover points from the total traj 
+    
+    % get optimal solution
+    [S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m(E_m, s_c, S_total_m(:,hover_idxs), S_total_m, s_target_est, s_s, params);
+    %[S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m_debug(E_m, s_c, S_total_m(:,hover_idxs), S_total_m, s_target_est, s_s, params);
+    
+    % store calculated trajectory 
+    S_opt_mat(:,:, m) = S_opt_m(:,:,end); % assign only final solution
+    
+    % sense target at each hover point 
+    D_meas(:,m) = sense_target(s_t, S_opt_mat(:,mu:mu:end,m), params); % get new K_stg measurments
+    
+    % get the estimated target matrix index
+    s_target_est  = estimate_target(S_opt_mat(:, mu:mu:end,1:m),D_meas(1:K_stg*m), params, 'gridsearch');
+                                                   
+    % calculate the available energy
+    E_m_used = calc_real_energy(S_opt_mat(:,:, m), s_s, params);
+    
+    % set new current point
+    s_s = S_opt_m(:,end,end);
+    
+    % calculate the energy 
+    E_m = E_m - E_m_used; 
+    
+    % store variables
+    E_used_vec(m)           = E_m_used;
+    E_m_vec(m)              = E_m;
+    E_min_vec(m)            = E_min;
+    S_init_mat(:,1:N_stg, m) = S_init;
+    S_target_est_mat(:,m)   = s_target_est;
+    V_m_mat(:,:,m)          = V_m(:,:,end);
+    delta_m_vec(:,m)        = delta_m(:,end);
+    xi_m_vec(:,m)           = xi_m(:,end);
+    CRB_opt_vecs(:,m)       = CRB_vec_m;
+    R_opt_vecs(:,m)         = R_vec_m;
+    
+    % increase the iteration variable
+    m = m+1;
 end
+fprintf('\n');
 
 M = m-1;   
 
