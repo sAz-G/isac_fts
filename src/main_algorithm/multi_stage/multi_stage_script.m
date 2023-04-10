@@ -28,7 +28,7 @@ S_opt_mat = res.S_opt_mat;
 s_b = setup.base_station_pos; % base station position 
 s_c = setup.comm_user_pos; % position of the communication user 
 s_t = setup.sense_target_pos;        % real position of the sensing target
-S_target_est_mat = res.S_target_est_mat;
+S_target_est_mat = [setup.est_sense_target, res.S_target_est_mat];
 
 % last stage here
 plot_map(S_opt_mat, s_b, s_t, S_target_est_mat, s_c,params);  % plot map 
