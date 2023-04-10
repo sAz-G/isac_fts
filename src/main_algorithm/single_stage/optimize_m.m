@@ -1,4 +1,4 @@
-function [S_opt, V_opt, xi_opt, delta_opt, CRB_opt, R_opt] = optimize_m(E_m, s_c,S_hover, S_total,s_t,s_s, params)
+function [S_opt, V_opt, xi_opt, delta_opt, CRB_opt, R_opt, CRB_iter, R_iter , J] = optimize_m(E_m, s_c, S_hover, S_total,s_t,s_s, params)
 % optimize_m optimizes the trajectory for given initial values at the
 % mth stage. This function returns the final results. For debugging, see
 % optimize_m_debug
@@ -29,7 +29,7 @@ eta     = params.sim.eta;    % trade of constant for the object function
 w_star  = params.sim.w_star; % step size
 N_stg   = params.sim.N_stg;  % amount of trajectory points at each stage 
 K_stg   = params.sim.K_stg;   % amount of trajectory hover points at each stage 
-
+best_val = 1e13;
 
 %% initial values 
 S_init = S_total(:,end-N_stg+1:end); 
@@ -38,11 +38,14 @@ V_init(:,1)       = (S_init(:,1)-s_s)./params.sim.T_f;
 V_init(:,2:end)   = (S_init(:,2:end)-S_init(:,1:end-1))./params.sim.T_f;
 delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
                         - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
-
 S_init_valid = S_init;
 S_valid      = S_init*1.1; % initial value for the valid solution. used only in case of nan in the first iteration  
 N_nan        = 0;             % amount of consecutive nan solutions
-   
+
+J = nan(iter,1);
+CRB_iter =  nan(iter,1);
+R_iter = nan(iter,1);
+
 for u = 1:iter  % optimization loop
 
 % assign optimized hover points and then optimized trajectory
@@ -62,8 +65,8 @@ rate_grad_x = rate_grad(S_total(:,end-N_stg+1:end), s_c, params, 'x',size(S_tota
 rate_grad_y = rate_grad(S_total(:,end-N_stg+1:end), s_c, params, 'y',size(S_total,2));
 
 % boundary values for the rate function 
-%R_max = rate_boundary(s_s,s_c,size(S_total,2),params, 'max');
-%R_min = rate_boundary(s_s,s_c,size(S_total,2),params, 'min');
+R_max = rate_boundary(s_s,s_c,size(S_total,2),params, 'max');
+R_min = rate_boundary(s_s,s_c,size(S_total,2),params, 'min');
 cvx_begin % cvx entry point
     if strcmp(params.opt_settings.solver, 'mosek')
         cvx_solver mosek         % use solver mosek
@@ -111,14 +114,14 @@ cvx_begin % cvx entry point
     
     % first degree taylor series expansion of the rate
     R_taylor =  rate_taylor_x + rate_taylor_y;
- 
+    R_taylor0 = avg_data_rate(S_init ,s_c, params,size(S_total,2));
 
     %% Objective function
     % minimization
     if strcmp(params.opt_settings.obj, 'abs')
         minimize(abs(eta.*(CRB_taylor)-(1-eta).*R_taylor));
     else
-        minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor);
+        minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor./1e06);
     end
     %% constraints
     
@@ -133,8 +136,9 @@ cvx_begin % cvx entry point
         S(2,:)  >= 0;                 % all y points are not negative
         L_x     >= S(1,:);            % all x points are bounded by L_x
         L_y     >= S(2,:);            % all y points are bounded by L_y
-        %R_taylor <= R_max;
-        %R_taylor >= R_min;
+        %R_taylor0 + R_taylor <= R_max;
+        %R_taylor0 + R_taylor >= R_min;
+        
         for i = 1:N_stg % add constraints 51a and 51b from the paper
            (norm(V_init(:, i))./v_0).^2 + (2./v_0.^2).*V_init(:, i).'*(V(:,i)-V_init(:,i)) >= pow_pos(inv_pos(delta(i)), 2)-xi(i);
            delta_square_init(i) + 2.*sqrt(delta_square_init(i)).*(delta(i) - sqrt(delta_square_init(i))) >=  xi(i);
@@ -149,6 +153,7 @@ if isnan(cvx_optval) %|| isinf(cvx_optval)% handle nan solutions, set new starti
     if u < iter % set an initial trajectory for the next iteration  
         %S_init            = S_init + ((1-w_star).^(N_nan)).*(S-S_init); % choose a point far away from the last initial point
         S_init            = S_init + (0.97.^(N_nan.^N_nan)).*(S-S_init); % start search from 0.97 to 0 to find a point that leads to a valid solution
+        %S_init            = S_init + w_star.*(S-S_init);
 
         V_init(:,1)       = (S_init(:,1)-s_s)./params.sim.T_f;
         V_init(:,2:end)   = (S_init(:,2:end)-S_init(:,1:end-1))./params.sim.T_f;
@@ -157,19 +162,31 @@ if isnan(cvx_optval) %|| isinf(cvx_optval)% handle nan solutions, set new starti
     else % if nan solution and last iteration, assign last valid solutions
         break; % stop optimizing if reached last iteration
     end
-else % if the solution is valid (not nan)
+else% if the solution is valid (not nan)
     N_nan = 0; % set this to 0 everytime the program provides a valid solution
     %store valid optimal solution in buffers. These are used only if in the
     %next iteration the algo provides nan solution 
-    S_valid         = S;
-    S_init_valid    = S_init; 
-    V_valid         = V;
-    delta_opt_valid = delta;
-    xi_valid        = xi;
-    R_opt_valid     = R_taylor;
-    CRB_opt_valid   = CRB_taylor;
+    if abs(best_val) > abs(cvx_optval)
+        S_valid         = S;
+        S_init_valid    = S_init; 
+        V_valid         = V;
+        delta_opt_valid = delta;
+        xi_valid        = xi;
+        R_opt_valid     = R_taylor;
+        CRB_opt_valid   = CRB_taylor;
+        best_val        = cvx_optval;        
+    end
     
-    if (u < iter) && (~( abs(cvx_optval) < params.opt_settings.threshold)) % set an initial trajectory for the next iteration  
+    if strcmp(params.opt_settings.obj, 'abs')
+            J(u) = abs(eta.*(CRB_taylor)-(1-eta).*R_taylor);
+    else
+            J(u) = eta.*(CRB_taylor)-(1-eta).*R_taylor./1e06;
+    end
+        
+    R_iter(u)    = R_taylor;
+    CRB_iter(u)  = CRB_taylor;
+    
+    if (u < iter) && (~( abs(cvx_optval) < params.opt_settings.threshold)) % set an initial values for the next iteration  
         S_init            = S_init + w_star.*(S-S_init);
         V_init(:,1)       = (S_init(:,1)-s_s)./params.sim.T_f;
         V_init(:,2:end)   = (S_init(:,2:end)-S_init(:,1:end-1))./params.sim.T_f;
@@ -178,16 +195,19 @@ else % if the solution is valid (not nan)
     else
         break; % stop optimizing
     end
-    
+
+
 end % end of if isnan(cvx_optval)
 end % end of for loop and optimization
 
-S_opt       = S_valid;      % store trajectory results of each iteration 
-V_opt       = V_valid;           % store velocity results of each iteration 
-delta_opt   = delta_opt_valid;   % store detla results of each iteration 
-xi_opt      = xi_valid;         % store xi results of each iteration 
-R_opt       = R_opt_valid;         % store rate results of each iteration 
-CRB_opt     = CRB_opt_valid;       % store crb results  of each iteration 
-
+S_opt       = S_valid;              % store trajectory results of each iteration 
+V_opt       = V_valid;              % store velocity results of each iteration 
+delta_opt   = delta_opt_valid;      % store detla results of each iteration 
+xi_opt      = xi_valid;             % store xi results of each iteration 
+R_opt       = R_opt_valid;          % store rate results of each iteration 
+%R_iter      = R_iter;%(~isnan(R_iter));
+CRB_opt     = CRB_opt_valid;        % store crb results  of each iteration 
+%CRB_iter    = CRB_iter;%(~isnan(CRB_iter));
+%J           = J;%(~isnan(J));
 end
 
