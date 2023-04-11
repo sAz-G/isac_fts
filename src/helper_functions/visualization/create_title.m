@@ -17,7 +17,7 @@ elseif nargin == 2
     N_stg = prms.sim.N_stg;
     mu = prms.sim.mu;
     iter = prms.sim.iter;
-    str_ttl = "(eta=" + eta + ")(w_{star}=" + w_star + ")(N_{stg}=" + N_stg + ")(mu=" + mu+")(" + "iter=" + iter + ")";  
+    str_ttl = "Trajectory: (\eta=" + eta + ")(w_{star}=" + w_star + ")(N_{stg}=" + N_stg + ")(\mu=" + mu+")(" + "iter=" + iter + ")";  
     ttl = title(axs,str_ttl);
 end
 
