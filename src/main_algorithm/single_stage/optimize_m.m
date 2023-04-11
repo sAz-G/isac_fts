@@ -180,7 +180,7 @@ else% if the solution is valid (not nan)
     if strcmp(params.opt_settings.obj, 'abs')
             J(u) = abs(eta.*(CRB_taylor)-(1-eta).*R_taylor);
     else
-            J(u) = eta.*(CRB_taylor)-(1-eta).*R_taylor./1e06;
+            J(u) = eta.*(CRB_taylor)-(1-eta).*R_taylor./params.sim.B;
     end
         
     R_iter(u)    = R_taylor;
