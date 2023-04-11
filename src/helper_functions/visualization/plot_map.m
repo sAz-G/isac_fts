@@ -15,6 +15,13 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
     end
     
     fig = figure;
+
+    xlabel("x [m]")
+    ylabel("y [m]")
+
+    xlim([0 1500])
+    ylim([0 1500])
+    
     hold on
     grid on
     
@@ -59,6 +66,9 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
     l = legend();
     l.Location = 'southeast';
     
+    set(gca,'xtick',[0:250:1500])
+    set(gca,'ytick',[0:250:1500])
+
     if isempty(params)
          l.String = {'S','s_b', 's_t','s_{est}', 's_c'};         
         create_title(gca);
