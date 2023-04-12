@@ -36,7 +36,11 @@ figure
 %plot(res.J')
 plot(res.J(~isnan(res.J(:,1)),~isnan(res.J(1,:)))');
 
-workspace_name = "ener" + setup.total_energy + "_iter" + params.sim.iter + "_omega" + params.sim.w_star + "_eta" + params.sim.eta; 
-workspace_name = strrep(workspace_name, '.','');
-out_path = create_output_path(fullfile('oscillation',workspace_name));
-save(fullfile(out_path, workspace_name + ".mat"));
+sv= 0;
+
+if sv
+    workspace_name = "ener" + setup.total_energy + "_iter" + params.sim.iter + "_omega" + params.sim.w_star + "_eta" + params.sim.eta; 
+    workspace_name = strrep(workspace_name, '.','');
+    out_path = create_output_path(fullfile('oscillation',workspace_name));
+    save(fullfile(out_path, workspace_name + ".mat"));
+end

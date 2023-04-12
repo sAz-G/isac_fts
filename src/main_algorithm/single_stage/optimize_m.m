@@ -121,7 +121,7 @@ cvx_begin % cvx entry point
     if strcmp(params.opt_settings.obj, 'abs')
         minimize(abs(eta.*(CRB_taylor)-(1-eta).*R_taylor));
     else
-        minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor./1e06);
+        minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor./params.sim.B);
     end
     %% constraints
     
