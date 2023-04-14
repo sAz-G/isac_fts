@@ -21,7 +21,7 @@ figure
 plot(res.J(~isnan(res.J(:,1)),~isnan(res.J(1,:)))');
 
 title('Objective function over the iterations per stage')
-ylabel('$\widetilde{\mathrm{CRB}}_\mathrm{Taylor}^m - (1 - \eta) \cdot \overline{R}^m_{\mathrm{Taylor}}$','interpreter','latex')
+ylabel('$\eta \cdot \widetilde{\mathrm{CRB}}_\mathrm{Taylor}^m - (1 - \eta) \cdot \overline{R}^m_{\mathrm{Taylor}}$','interpreter','latex')
 xlabel('iterations')
 
 dim = size(res.J(~isnan(res.J(:,1)),~isnan(res.J(1,:))));
