@@ -16,7 +16,7 @@ end
 % load the simulation parameters 
 run("call_hyperParam.m")
 
-number_mc_iterations = 25;
+number_mc_iterations = 35;
 L_x = params.sim.L_x;
 L_y = params.sim.L_y;
 
@@ -40,11 +40,12 @@ for cur_total_energy = energy_vec
     % call the monte_carlo function to to the monte-carlo-simulation of the current setup
     res_mc = monte_carlo(params, setup, number_mc_iterations);
     
+   
     % save the avg. CRB
-    CRB_over_energy(counter) = res_mc.CRB_avg;
-    MSE(counter)             = res_mc.MSE_avg;
+    CRB_over_energy(counter)    = mean(res_mc.CRB_avg);
+    MSE(counter)             = mean(res_mc.MSE_avg);
     % save the avg. Rate
-    Rate_over_energy(counter) = res_mc.Rate_avg;
+    Rate_over_energy(counter)   = mean(res_mc.Rate_avg);
     counter = counter + 1;
 end
 
@@ -52,18 +53,15 @@ end
 out_path = create_output_path(fullfile('monte_carlo_variations','var_ener'));
 
 figure
-title("MC-Simulation over energy: (iter=" + params.sim.iter +")")
-subplot(2,1,1)
-plot(energy_vec, (CRB_over_energy))
+title("Energy Variation")
+semilogy(energy_vec, (CRB_over_energy))
+hold on
+semilogy(energy_vec, (MSE))
+hold off
 grid on
 xlabel("energy")
-ylabel("CRB")
-
-subplot(2,1,2)
-plot(energy_vec, (MSE))
-grid on
-xlabel("energy")
-ylabel("MSE")
+ylabel("Estimation Error")
+legend("CRB", "MSE")
 
 saveas(gcf, fullfile(out_path, 'MC_CRB_MSE_over_ener'), 'epsc');
 saveas(gcf, fullfile(out_path, 'MC_CRB_MSE_over_ener'), 'png');
