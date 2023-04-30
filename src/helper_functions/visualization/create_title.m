@@ -1,21 +1,3 @@
-%------------------------------------------------------------------------
-% FUNCTION NAME: create_title
-% AUTHOR: Sharif Azem
-%         Markus Krantzik
-%
-% DESCRIPTION: creates the title of the trajectory map, which is created
-% using the function plot_map
-%
-% INPUTS:
-%   varargin - current axis and a struct 
-%
-% OUTPUTS:
-%   ttl - the title
-%
-% USAGE:  ttl = create_title(gca,params);
-%
-%------------------------------------------------------------------------
-
 function ttl = create_title(varargin)
 
 def_ttl = "Default";
