@@ -1,4 +1,4 @@
-function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c, varargin)
+function [p_s,p_h, p_b, p_t, p_c, p_t_hat,fig] = plot_map(S, s_b, s_t, s_t_est, s_c, varargin)
 %PLOT_MAP plots the map for a given trajectory and base station, target and
 %communication user position.
 % arguments: 
@@ -86,6 +86,7 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
         l.String = {'S','s_b','s_t', 's_{est}','s_c', 'S_h'};
         create_title(gca, params);
     end
+    
     
 end
 
