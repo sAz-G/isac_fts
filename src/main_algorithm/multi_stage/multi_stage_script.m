@@ -31,16 +31,25 @@ s_t = setup.sense_target_pos;        % real position of the sensing target
 S_target_est_mat = [setup.est_sense_target, res.S_target_est_mat];
 
 % last stage here
-plot_map(S_opt_mat, s_b, s_t, S_target_est_mat, s_c,params);  % plot map 
-figure
+[~,~,~,~,~,~,f1] = plot_map(S_opt_mat, s_b, s_t, S_target_est_mat, s_c,params);  % plot map 
+f2 = figure(2);
 %plot(res.J')
 plot(res.J(~isnan(res.J(:,1)),~isnan(res.J(1,:)))');
-
+ylabel('$\eta\widetilde{CRB}_\mathrm{Taylor}^m - (1 - \eta)\overline{R}^m_{\mathrm{Taylor}}$', 'Interpreter','latex');
+xlabel('Iterations')
+title('Oscillation at different stages')
+grid on
+legend("m=1","m=2","m=3","m=4","m=5","m=6")
+legend('Location','southeast')
 sv= 0;
 
 if sv
     workspace_name = "ener" + setup.total_energy + "_iter" + params.sim.iter + "_omega" + params.sim.w_star + "_eta" + params.sim.eta; 
     workspace_name = strrep(workspace_name, '.','');
     out_path = create_output_path(fullfile('oscillation',workspace_name));
+    saveas(f1, fullfile(out_path, 'map'), 'png');
+    saveas(f1, fullfile(out_path, 'map'), 'epsc');
+    saveas(f2, fullfile(out_path, 'osc'), 'png');
+    saveas(f2, fullfile(out_path, 'osc'), 'epsc');
     save(fullfile(out_path, workspace_name + ".mat"));
 end
