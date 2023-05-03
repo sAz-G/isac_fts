@@ -1,10 +1,18 @@
-%% multi_stage_script is an etnry point for the multi stage algorithm.
-% it loads the parameters that are needed, which include the simulation
-% setup and parameters that are given in the paper. Then it calls the
-% function multi_stage to obtain the solution, plots the results and saves
-% them.
+%------------------------------------------------------------------------
+% SCRIPT: multi_stage_script
+% AUTHOR: Sharif Azem
+%         Markus Krantzik
 %
-%%
+% DESCRIPTION: perform multi stage algorithm
+%
+% INPUTS:
+% calls parameters script
+%
+% OUTPUTS:
+% saves workspace and plots
+% USAGE: run script
+%------------------------------------------------------------------------
+
 clear;
 clc;
 close all;

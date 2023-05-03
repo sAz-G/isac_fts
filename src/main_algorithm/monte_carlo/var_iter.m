@@ -1,3 +1,17 @@
+%------------------------------------------------------------------------
+% SCRIPT: var_iter
+% AUTHOR: Sharif Azem
+%         Markus Krantzik
+%
+% DESCRIPTION: perform monte_carlo sims on iteration values
+%
+% INPUTS:
+% calls parameters script
+%
+% OUTPUTS:
+% saves workspace and plots
+% USAGE: run script
+%------------------------------------------------------------------------
 %%
 clear;
 clc;
@@ -9,14 +23,12 @@ elseif isunix
     addpath(genpath("../../../src"));
 end 
 
-% set rng to default
-
 %% Simulation parameter
 
 % load the simulation parameters 
 run("call_hyperParam.m")
 
-number_mc_iterations = 30;
+number_mc_iterations = 35;
 L_x = params.sim.L_x;
 L_y = params.sim.L_y;
 
@@ -28,6 +40,7 @@ MSE             = zeros(1,length(iter_vec));
 
 counter = 1;
 
+% generate positions
 start_bound = 0;
 setup.comm_user_pos    = [start_bound+ (params.sim.L_x-start_bound)*rand(1,number_mc_iterations) ; start_bound + (params.sim.L_y-start_bound)*rand(1,number_mc_iterations) ];
 setup.sense_target_pos = [start_bound+ (params.sim.L_x-start_bound)*rand(1,number_mc_iterations) ; start_bound + (params.sim.L_y-start_bound)*rand(1,number_mc_iterations) ];

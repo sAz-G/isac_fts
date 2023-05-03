@@ -1,3 +1,18 @@
+%------------------------------------------------------------------------
+% SCRIPT: var_energy
+% AUTHOR: Sharif Azem
+%         Markus Krantzik
+%
+% DESCRIPTION: perform monte_carlo sims on energy levels
+%
+% INPUTS:
+% calls parameters script
+%
+% OUTPUTS:
+% saves workspace and plots
+% USAGE: run script
+%------------------------------------------------------------------------
+
 %%
 clear;
 clc;
@@ -20,6 +35,7 @@ number_mc_iterations = 35;
 L_x = params.sim.L_x;
 L_y = params.sim.L_y;
 
+% variation of energy 
 energy_vec = 10e3:5e3:35e3;
 MSE = zeros(1,length(energy_vec));
 CRB_over_energy = zeros(1,length(energy_vec));
@@ -27,13 +43,14 @@ Rate_over_energy = zeros(1,length(energy_vec));
 
 counter = 1;
 
+% generate positions
 start_bound = 0;
 setup.comm_user_pos    = [start_bound+ (params.sim.L_x-start_bound)*rand(1,number_mc_iterations) ; start_bound + (params.sim.L_y-start_bound)*rand(1,number_mc_iterations) ];
 setup.sense_target_pos = [start_bound+ (params.sim.L_x-start_bound)*rand(1,number_mc_iterations) ; start_bound + (params.sim.L_y-start_bound)*rand(1,number_mc_iterations) ];
 setup.est_sense_target = [ (params.sim.L_x)*rand(1,number_mc_iterations); (params.sim.L_y)*rand(1,number_mc_iterations) ];
 
 %% Variation of the total energy
-for cur_total_energy = energy_vec
+for cur_total_energy = energy_vec % iterate over energy
     fprintf('Variation : n = %.f/%.f, Energy: %.f\n', counter, length(energy_vec), cur_total_energy);
     % set the total available energy
     setup.total_energy = cur_total_energy;
@@ -52,6 +69,7 @@ end
 %% Evaluate and plot the parameters
 out_path = create_output_path(fullfile('monte_carlo_variations','var_ener'));
 
+% plot and save results
 figure
 title("Energy Variation")
 semilogy(energy_vec, (CRB_over_energy))

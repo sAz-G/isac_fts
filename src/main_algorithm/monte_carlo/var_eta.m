@@ -1,3 +1,17 @@
+%------------------------------------------------------------------------
+% SCRIPT: var_eta
+% AUTHOR: Sharif Azem
+%         Markus Krantzik
+%
+% DESCRIPTION: perform monte_carlo sims on eta values
+%
+% INPUTS:
+% calls parameters script
+%
+% OUTPUTS:
+% saves workspace and plots
+% USAGE: run script
+%------------------------------------------------------------------------
 %%
 clear;
 clc;
@@ -27,6 +41,7 @@ MSE           = zeros(1,length(eta_vec));
 
 counter = 1;
 
+% generate positions
 start_bound = 0;
 setup.comm_user_pos    = [start_bound+ (params.sim.L_x-start_bound)*rand(1,number_mc_iterations) ; start_bound + (params.sim.L_y-start_bound)*rand(1,number_mc_iterations) ];
 setup.sense_target_pos = [start_bound+ (params.sim.L_x-start_bound)*rand(1,number_mc_iterations) ; start_bound + (params.sim.L_y-start_bound)*rand(1,number_mc_iterations) ];
