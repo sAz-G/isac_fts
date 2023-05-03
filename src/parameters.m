@@ -1,11 +1,6 @@
-%% predefined hyper parameters for the algorithm
-% below the used units are provided. Using known already units.
-% Hz (Hertz), s (seconds), m (meters), dB (deziBel)
- 
-%% Communication model parameters
+%% predefined parameters for the algorithm
 clear 
 clc
-%rng shuffle;
 rng default;
 params = struct('sim', ...
                    {struct( ... % parameters from table 1 in the paper and other few params
@@ -44,8 +39,7 @@ params = struct('sim', ...
                             'solver'                , {'mosek'},          ...  % diefferent solvers - differnet reults. overall similar
                             'precision'             , {'medium'},           ...  % higher not necassarily better
                             'threshold'             , {1e-20},            ...  % lower might be worse. try out to find best.
-                            'screen_out'            , {0},                ...  % screen output     
-                            'obj'                   , {'original'}        ...  % original or abs minimization. the results are different
+                            'screen_out'            , {0}                ...  % screen output     
                             )}...
                ); % end params 
 
@@ -58,6 +52,6 @@ setup = struct('base_station_pos', {[100; 100]},            ...
                'comm_user_pos',    {[1300; 1200]},          ...
                'est_sense_target', {[1200; 700]},           ...
                'sense_target_pos', {[200; 1300]},           ...
-               'total_energy',     {35e3}                   ...
+               'total_energy',     {10e3}                   ...
                );
 

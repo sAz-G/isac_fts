@@ -1,16 +1,24 @@
-function [x_t,y_t] = grid_vectors(Lx,Ly,rx,ry)
-% grid_vectors(Lx,Ly,rx,ry) creates two vectors in y and x direction. rx and
-% ry are the resolution parameters in each dimension
-% Input:
-% L_x - the limit in x direction.
-% L_y - the limit in y direction.
+%------------------------------------------------------------------------
+% FUNCTION NAME: grid_vectors
+% AUTHOR: Sharif Azem
+%         Markus Krantzik
 %
-% Output: 
-% x_t - the output vector for the x direction, which starts at x = 0 and
-% ends at x = Lx. The vector has r_x elements.
-% y_t - the output vector for the y direction, which starts at y = 0 and
-% ends at y = Ly. The vector has r_y elements.
+% DESCRIPTION: % create vectors for the grid to use grid search on
+%
+% INPUTS:
+%   L_x - the limit in x direction.
+%   L_y - the limit in y direction.
+%   r_x - amount of grid points.
+%
+% OUTPUTS:
+%   x_t - the output vector for the x direction
+%   y_t - the output vector for the y direction
+%
+% USAGE:  [x_t,y_t] = grid_vectors(Lx,Ly,rx,ry)
+%
+%------------------------------------------------------------------------
 
+function [x_t,y_t] = grid_vectors(Lx,Ly,rx,ry)
 x_t = linspace(0,Lx,rx);
 y_t = linspace(0,Ly,ry);
 end

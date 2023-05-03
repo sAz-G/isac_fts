@@ -1,9 +1,12 @@
-function [S_opt, V_opt, xi_opt, delta_opt, CRB_opt, R_opt, CRB_iter, R_iter , J] = optimize_m(E_m, s_c, S_hover, S_total,s_t,s_s, params)
-% optimize_m optimizes the trajectory for given initial values at the
-% mth stage. This function returns the final results. For debugging, see
-% optimize_m_debug
-%   
-% input: 
+%------------------------------------------------------------------------
+% FUNCTION NAME: optimize_m
+% AUTHOR: Sharif Azem
+%         Markus Krantzik
+%
+% DESCRIPTION:  optimize_m optimizes the trajectory for given initial values at the
+% mth stage. This function returns the final results. 
+%
+% INPUTS:
 % 
 % E_m               - the available energy at the mth stage. This is needed for the constraint. 
 % s_c               - position of the communication user 
@@ -13,8 +16,26 @@ function [S_opt, V_opt, xi_opt, delta_opt, CRB_opt, R_opt, CRB_iter, R_iter , J]
 %                     points of the mth stage are going to be optimized.
 % params            - constants that are defined before running the whole program
 %
-% return:
-% optimization variables of each iteration 
+% s_s               - starting point
+% s_b               - base station position
+% s_t               - (estimated) target position 
+%
+% OUTPUTS:
+%   S_opt     - optimal trajectory of stage m
+%   V_opt     - Velocity matrix
+%   xi_opt    - opt. variable xi
+%   delta_opt - opt. variable delta
+%   CRB_opt   - opt. crb used in the objective function J
+%   R_opt     - opt. rate function used in the objective function J
+%   CRB_iter  - value of CRB_opt at each iteration
+%   R_iter    - value of R_opt at each iteration  
+%   J         - objective function 
+%
+% USAGE: [S_opt, V_opt, xi_opt, delta_opt, CRB_opt, R_opt, CRB_iter, R_iter , J] = optimize_m(E_m, s_c, S_hover, S_total,s_t,s_s, params)
+%
+%-----------------------------------------------------------------------
+
+function [S_opt, V_opt, xi_opt, delta_opt, CRB_opt, R_opt, CRB_iter, R_iter , J] = optimize_m(E_m, s_c, S_hover, S_total,s_t,s_s, params)
 
 % constants 
 L_x   = params.sim.L_x;     % boundary in the x direction 
@@ -22,12 +43,12 @@ L_y   = params.sim.L_y;     % boundary in the y direction
 V_max = params.sim.V_max;   % max possibe velocity
 
 v_0     = params.energy.v_0;    % energy parameter 
-
-iter    = params.sim.iter;   % amount of iterations for the optimization algo
-mu      = params.sim.mu;     % sense target every mu points. 1,2,mu,...,N_m
-eta     = params.sim.eta;    % trade of constant for the object function 
-w_star  = params.sim.w_star; % step size
-N_stg   = params.sim.N_stg;  % amount of trajectory points at each stage 
+ 
+iter    = params.sim.iter;    % amount of iterations for the optimization algo
+mu      = params.sim.mu;      % sense target every mu points. 1,2,mu,...,N_m
+eta     = params.sim.eta;     % trade of constant for the object function 
+w_star  = params.sim.w_star;  % step size
+N_stg   = params.sim.N_stg;   % amount of trajectory points at each stage 
 K_stg   = params.sim.K_stg;   % amount of trajectory hover points at each stage 
 best_val = 1e13;
 
@@ -64,9 +85,6 @@ rate_grad_x = rate_grad(S_total(:,end-N_stg+1:end), s_c, params, 'x',size(S_tota
 % gradient of rate in y direction 
 rate_grad_y = rate_grad(S_total(:,end-N_stg+1:end), s_c, params, 'y',size(S_total,2));
 
-% boundary values for the rate function 
-R_max = rate_boundary(s_s,s_c,size(S_total,2),params, 'max');
-R_min = rate_boundary(s_s,s_c,size(S_total,2),params, 'min');
 cvx_begin % cvx entry point
     if strcmp(params.opt_settings.solver, 'mosek')
         cvx_solver mosek         % use solver mosek
@@ -114,24 +132,11 @@ cvx_begin % cvx entry point
     
     % first degree taylor series expansion of the rate
     R_taylor =  rate_taylor_x + rate_taylor_y;
-    R_taylor0 = avg_data_rate(S_init ,s_c, params,size(S_total,2));
 
-    %% Objective function
     % minimization
-    if strcmp(params.opt_settings.obj, 'abs')
-        minimize(abs(eta.*(CRB_taylor)-(1-eta).*R_taylor));
-    else
-        minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor./(params.sim.B));
-    end
-
-% if u>=10
-%         minimize(abs(eta.*(CRB_taylor)-(1-eta).*R_taylor./params.sim.B));
-% else
-%         minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor./params.sim.B);
-% end
+    minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor./(params.sim.B));
     
-    %% constraints
-    
+    % constraints    
     subject to
         E_m     >= calc_constraint_energy(V,delta, params); % energy constraint
         (S(:,1) - s_s)./params.sim.T_f == V(:,1); % definition of the velocity
@@ -143,8 +148,6 @@ cvx_begin % cvx entry point
         S(2,:)  >= 0;                 % all y points are not negative
         L_x     >= S(1,:);            % all x points are bounded by L_x
         L_y     >= S(2,:);            % all y points are bounded by L_y
-        %R_taylor0 + R_taylor <= R_max;
-        %R_taylor0 + R_taylor >= R_min;
         
         for i = 1:N_stg % add constraints 51a and 51b from the paper
            (norm(V_init(:, i))./v_0).^2 + (2./v_0.^2).*V_init(:, i).'*(V(:,i)-V_init(:,i)) >= pow_pos(inv_pos(delta(i)), 2)-xi(i);
@@ -183,13 +186,8 @@ else% if the solution is valid (not nan)
         CRB_opt_valid   = CRB_taylor;
         best_val        = cvx_optval;        
     end
-    
-    if strcmp(params.opt_settings.obj, 'abs')
-            J(u) = abs(eta.*(CRB_taylor)-(1-eta).*R_taylor./(params.sim.B));
-    else
-            J(u) = eta.*(CRB_taylor)-(1-eta).*R_taylor./(params.sim.B);
-    end
-        
+   
+    J(u) = eta.*(CRB_taylor)-(1-eta).*R_taylor./(params.sim.B);
     R_iter(u)    = R_taylor;
     CRB_iter(u)  = CRB_taylor;
     
@@ -212,9 +210,7 @@ V_opt       = V_valid;              % store velocity results of each iteration
 delta_opt   = delta_opt_valid;      % store detla results of each iteration 
 xi_opt      = xi_valid;             % store xi results of each iteration 
 R_opt       = R_opt_valid;          % store rate results of each iteration 
-%R_iter      = R_iter;%(~isnan(R_iter));
 CRB_opt     = CRB_opt_valid;        % store crb results  of each iteration 
-%CRB_iter    = CRB_iter;%(~isnan(CRB_iter));
-%J           = J;%(~isnan(J));
+
 end
 

@@ -1,8 +1,7 @@
-
 % import the constant parameters
 
 if ispc
-    run("..\..\hyperParam.m")
+    run("..\..\parameters.m")
 elseif isunix
-    run("../../hyperParam.m")
+    run("../../parameters.m")
 end 

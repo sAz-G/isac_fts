@@ -1,11 +1,35 @@
-function grad = fisher_entry_gradient(S_hov,s_t,type, direction,params,relative_dist_vec,factor_CRB)
-%FISHER_ENTRY_TAYLOR Summary of this function goes here
-%   Detailed explanation goes here
+%------------------------------------------------------------------------
+% FUNCTION NAME: fisher_entry_gradient
+% AUTHOR: Sharif Azem
+%         Markus Krantzik
+%
+% DESCRIPTION: calculate the gradient of an entry of the fisher information
+% matrix
+%
+% INPUTS:
+%   S_hov             - Hover points of the drone
+%   s_t               - Position of the sensing target
+%   type              - theta_a, theta_b, theta_c
+%   direction         - x or y 
+%   relative_dist_vec - vector of the relative distances
+%   params            - Predefined parameters
+%   factor_CRB        - a constant calculated using the sensing parameters
+%
+% OUTPUTS:
+%   grad - a vector of the gradient   
+%
+% USAGE:  grad = fisher_entry_gradient(S_hov,s_t,type,direction,params,relative_dist_vec,factor_CRB);
+%
+%------------------------------------------------------------------------
 
+function grad = fisher_entry_gradient(S_hov,s_t,type, direction,params,relative_dist_vec,factor_CRB)
+
+% check if relative_dist_vec is inserted as input. calculate if not  
 if ~exist('relative_dist_vec', 'var')
         relative_dist_vec         = relative_distance(S_hov, s_t, params.sim.H);
 end
 
+% check if factor_CRB is inserted. calculate if not 
 if ~exist('factor_CRB', 'var')
         P              = params.sim.P;
         G_p            = params.sim.G_p;
@@ -15,7 +39,7 @@ if ~exist('factor_CRB', 'var')
         factor_CRB     = (P.*G_p.*beta_0)/(a*sigma_0.^2);
 end
 
-
+% calculate the gradient
 if strcmp(type, 'theta_a')
     rel_pos_x = S_hov(1,:) - s_t(1);    
     rel_pos_y = S_hov(2,:) - s_t(2);   
@@ -43,7 +67,7 @@ else
 
 end
 
-
+% a function to calculate the gradient of theta_c
 function grad_c = c_entry_grad(S_hov, s_t, relative_dist_vec,direction,factor_CRB)
     if     strcmp(direction, 'x')
             re_pos_x = S_hov(1,:) - s_t(1);    
@@ -53,7 +77,7 @@ function grad_c = c_entry_grad(S_hov, s_t, relative_dist_vec,direction,factor_CR
             re_pos_x = S_hov(2,:) - s_t(2);   
     end
     grad_c = re_pos_y.*(factor_CRB./(relative_dist_vec.^6)+8./(relative_dist_vec.^4));
-      grad_c = grad_c - re_pos_x.^2.*re_pos_y.*(6*factor_CRB./(relative_dist_vec.^8)+32./(relative_dist_vec.^6));
+    grad_c = grad_c - re_pos_x.^2.*re_pos_y.*(6*factor_CRB./(relative_dist_vec.^8)+32./(relative_dist_vec.^6));
 end
 
 end

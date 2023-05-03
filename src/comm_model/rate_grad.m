@@ -1,14 +1,25 @@
-function grad_rate_dim = rate_grad(S,s_c,params,dim,N)
-%RATE_GRADIENT_DIM provides the gradient of the rate function in a given
-%dimension (x or y)
-% input:
-% 
+%------------------------------------------------------------------------
+% FUNCTION NAME: rate_grad
+% AUTHOR: Sharif Azem
+%         Markus Krantzik
+%
+% DESCRIPTION:  calculates the gradient of the rate of function along a given dimension 
+%
+% INPUTS:
 % S         - the trajectory points at which the gradient is going to be calculated
 % s_c       - the position of the communication user
 % params    - simulation paramseters and constants
 % dim       - x or y dimension.
 % N         -  amount of trajectory points (can be different from the amount of
 %               points in S, because of the multi stage approach).
+%
+% OUTPUTS:
+%       grad_rate_dim - gradient in the given dimension
+%
+% USAGE: grad_rate_dim = rate_grad(S,s_c,params,dim,N)
+%-----------------------------------------------------------------------
+
+function grad_rate_dim = rate_grad(S,s_c,params,dim,N)
 
 P              = params.sim.P;
 sigma_0        = params.sim.sigma_0;

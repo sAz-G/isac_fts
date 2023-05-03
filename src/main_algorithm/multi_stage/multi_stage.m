@@ -1,20 +1,33 @@
-function results_M = multi_stage(params, setup)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+%------------------------------------------------------------------------
+% FUNCTION NAME: multi_stage
+% AUTHOR: Sharif Azem
+%         Markus Krantzik
+%
+% DESCRIPTION:  
+%               passed the parameters that are needed, which include the simulation
+%               setup and parameters that are given in the paper. The initial values that
+%               are needed for each stage are calculated and passed to the function
+%               optimize_m which optimizes the trajectory at the mth stage. 
+%               All variables that are considered in the optimization process in each
+%               stage are stored in matrices. These variables include the optimization
+%               functions and functions and variables that are considered in the
+%               constraints. Also the estimated sensing target positions obtained at each
+%               stage are stored in a matrix. 
+%
+% INPUTS:
+%   params - predefined parameters
+%   setup  - further setup parameters
+%
+% OUTPUTS:
+%   results_M - results of the multistage algorithm
+%
+% USAGE: results_M = multi_stage(params, setup)
+%
+%-----------------------------------------------------------------------
 
-%% multi_stage_script is an etnry point for the multi stage algorithm.
-% it loads the parameters that are needed, which include the simulation
-% setup and parameters that are given in the paper. The initial values that
-% are needed for each stage are calculated and passed to the function
-% optimize_m* which optimizes the trajectory at the mth stage. 
-% All variables that are considered in the optimization process in each
-% stage are stored in matrices. These variables include the optimization
-% functions and functions and variables that are considered in the
-% constraints. Also the estimated sensing target positions obtained at each
-% stage is stored in a matrix. 
-%
-% the function multi_stage is based on this script.
-%
+
+function results_M = multi_stage(params, setup)
+
 
 %% Simulation parameter
 mu  = params.sim.mu;      % measurment step. Measure sensing target every mu steps
@@ -25,7 +38,7 @@ K_stg = params.sim.K_stg;  % amount of hovering points in every stage
 %% Simulation Setup
 % Basestation
 s_b = setup.base_station_pos;        % base station position 
-s_s = s_b;                           % start position of the initial trajectory (not necessary of the real trajectory)
+s_s = s_b;                           % start position of the initial trajectory 
 
 % Communication user
 s_c = setup.comm_user_pos;           % position of the communication user 
@@ -85,7 +98,6 @@ while E_min < E_m % break if the energy is not enough for additional N_stg point
 
     % get optimal solution
     [S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m,CRB_m, R_m, J_m] = optimize_m(E_m, s_c, S_total_m(:,hover_idxs), S_total_m, s_target_est, s_s, params);
-    %[S_opt_m, V_m, xi_m, delta_m,CRB_vec_m,R_vec_m] = optimize_m_debug(E_m, s_c, S_total_m(:,hover_idxs), S_total_m, s_target_est, s_s, params);
     
     % store calculated trajectory 
     S_opt_mat(:,:, m) = S_opt_m(:,:,end); % assign only final solution

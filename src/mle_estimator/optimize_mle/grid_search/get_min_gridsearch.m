@@ -1,68 +1,64 @@
-function [idx, idy,min_val] = get_min_gridsearch(D_est,x_t,y_t,x_jt,y_jt,params)
-% get_min(est, params) is the function, for which we want to find the
+%------------------------------------------------------------------------
+% FUNCTION NAME: get_min
+% AUTHOR: Sharif Azem
+%         Markus Krantzik
+%
+% DESCRIPTION: %  We want to find the
 % minimum(objective function (of)).
-% 
-% Note that this is not the original of, which is the log of a gaussian
-% distribution (eq. 58 in the paper). The gaussian distribution is defined
-% as eq. 57 in the paper.
-%  
-% After reshaping the log of eq. 57, and then modifing eq. 58, we get the
-% following expression:
 %
-% min(L(f)) = 
-% sum(log((x_{j}^{m}-x_{t})^2+(y_{j}^{m}-y_{t})^2))
-% + sum(frac{dhat_{s}^{m}-sqrt((x_{j}^{m}-x_{t})^2+(y_{j}^{m}-y_{t})^2))}{(x_{j}^{m}-x_{t})^2+(y_{j}^{m}-y_{t})^2)})
+% INPUTS:
+%   x_t,y_t: Parameters of the mle. These are the
+%            possible target coordinates.
+%   D_est:   The vector of estimated distances .
 %
-% Arguments:
-% x_t,y_t: With respect to this parameters we minimum the of. These are the
-% possible target coordinates.
-% D_est: The vector of estimated positions up to the current estimation.
+% OUTPUTS:
+%   idx - matrix id of the x position 
+%   idy - matrix id of the y position
+%   min_val - minimum value 
+%
+% USAGE:  [idx, idy,min_val] = get_min_gridsearch(D_est,x_t,y_t,x_jt,y_jt,params)
+%
+%------------------------------------------------------------------------
+
+function [idx, idy,min_val] = get_min_gridsearch(D_est,x_t,y_t,x_jt,y_jt,params)
 
 x_dim = length(x_t);    % dimension in x direction of the matrices after using meshgrid
 y_dim = length(y_t);    % dimension in y direction of the matrices after using meshgrid
 xj_dim = length(x_jt);  % dimension in x direction of the matrices after using meshgrid
 yj_dim = length(y_jt);  % dimension in y direction of the matrices after using meshgrid
 
+% create a grid
 [X_t, Y_t] = meshgrid(x_t, y_t);
 X_t        = repmat(X_t, [1,1,xj_dim]);
 Y_t        = repmat(Y_t, [1,1,yj_dim]);
-% figure(333)
-% plot(X_t(:),Y_t(:),'.')
-% hold on 
-% title('plot at function gridsearch')
+
+% create distance grid and grid of hovering positions
 D_mat_est  = ones(x_dim,y_dim, length(D_est));
 Y_jt       = ones(x_dim,y_dim,yj_dim);
 X_jt       = ones(x_dim,y_dim,xj_dim);
-%H_mat      = ones(x_dim,y_dim, length(D_est)).*params.sim.H;
-
 for k = 1:length(D_est)
     D_mat_est(:,:,k) = D_est(k);
     Y_jt(:,:,k)      = y_jt(k);
     X_jt(:,:,k)      = x_jt(k);
 end
 
-P_xy = (X_t-X_jt).^2+(Y_t-Y_jt).^2 +params.sim.H.^2;% H_mat.^2;
+% calc the mle
+P_xy = (X_t-X_jt).^2+(Y_t-Y_jt).^2 +params.sim.H.^2;
 log_Pxy = log(P_xy);
-
 numerator   = D_mat_est-sqrt(P_xy);
 denominator = P_xy;
-
 fraction = (numerator./denominator).^2;
-
+% constants
 P              = params.sim.P;
 G_p            = params.sim.G_p;
 beta_0         = params.sim.beta_0;
 a              = params.sim.a;
 sigma_0        = params.sim.sigma_0;
-
+% final expression of the mle
 factor   = (P*G_p*beta_0)./(a*sigma_0.^2);
 func = sum(log_Pxy + factor*fraction,3);
-
+% calc min 
 [min_val,idx]   = min(func(:));
 [idy,idx] = ind2sub(size(func),idx); 
-
-%plot_mle(func, params);
-%plot_pdf(X_t, Y_t, X_jt, Y_jt, H_mat, D_mat_est, params);
-
 end
 
