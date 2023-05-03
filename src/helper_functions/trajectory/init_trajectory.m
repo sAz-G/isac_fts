@@ -28,8 +28,7 @@ s_e = S_init(:,end); % get last position at the initial trajectory
 
 
 if (s_e(1) > L_x)&&(s_e(2) > L_y)                                    % x position x out of bounds
-    
-    if (abs(s_e-[L_x; s_e(2)]) > abs(s_e-[s_e(1); L_y]))
+    if (abs(s_start(2)-L_y) > abs(s_start(1)-L_x))
         x_new  = L_x;                                                    % calc new x
         s_e(1) = x_new;                             % calc new x
         grad   = s_start - s_end;                   % calc diff to obtain slope
@@ -49,7 +48,7 @@ if (s_e(1) > L_x)&&(s_e(2) > L_y)                                    % x positio
     S_init(1,:) = linspace(s_start(1) + V_str.*T_f,s_e(1), N); % obtain linear trajectory. Note velocity is different than input
     S_init(2,:) = linspace(s_start(2) + V_str.*T_f,s_e(2), N);
 elseif (s_e(1) > L_x)&&(s_e(2) < 0)
-    if (abs(s_e-[L_x; s_e(2)]) > abs(s_e-[s_e(1); 0]))
+    if (s_start(2) > abs(s_start(1)-L_x))
         x_new  = L_x;                                                    % calc new x
         s_e(1) = x_new;                             % calc new x
         grad   = s_start - s_end;                   % calc diff to obtain slope
@@ -69,7 +68,7 @@ elseif (s_e(1) > L_x)&&(s_e(2) < 0)
     S_init(1,:) = linspace(s_start(1) + V_str.*T_f,s_e(1), N); % obtain linear trajectory. Note velocity is different than input
     S_init(2,:) = linspace(s_start(2) + V_str.*T_f,s_e(2), N);
 elseif (s_e(1) < 0)&&(s_e(2) > L_y)
-    if (abs(s_e-[0; s_e(2)]) > abs(s_e-[s_e(1); L_y]))
+    if (abs(s_start(2)-L_y) > s_start(1))
         x_new  = 0;                                                    % calc new x
         s_e(1) = x_new;                             % calc new x
         grad   = s_start - s_end;                   % calc diff to obtain slope
@@ -89,8 +88,9 @@ elseif (s_e(1) < 0)&&(s_e(2) > L_y)
     S_init(1,:) = linspace(s_start(1) + V_str.*T_f,s_e(1), N); % obtain linear trajectory. Note velocity is different than input
     S_init(2,:) = linspace(s_start(2) + V_str.*T_f,s_e(2), N);
 elseif (s_e(1)  < 0)&&(s_e(2)  < 0)
-    if (abs(s_e-[0; s_e(2)]) > abs(s_e-[s_e(1); 0]))
-        x_new  = 0;                                                    % calc new x
+    if (s_start(2) > s_start(1))
+        x_new  = 0;                
+        % calc new x
         s_e(1) = x_new;                             % calc new x
         grad   = s_start - s_end;                   % calc diff to obtain slope
         grad   = grad(2)./grad(1);                  % calc slop
