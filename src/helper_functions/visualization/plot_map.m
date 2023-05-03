@@ -1,13 +1,25 @@
-function [p_s,p_h, p_b, p_t, p_c, p_t_hat,fig] = plot_map(S, s_b, s_t, s_t_est, s_c, varargin)
-%PLOT_MAP plots the map for a given trajectory and base station, target and
-%communication user position.
-% arguments: 
-% S    - quad trajectory.
-% s_b  - base station position.
-% s_t  - target position. 
-% s_c  - communication user position.
+%------------------------------------------------------------------------
+% FUNCTION NAME: plot_map
+% AUTHOR: Sharif Azem
+%         Markus Krantzik
+%
+% DESCRIPTION: creates a trajectory map
+%
+% INPUTS:
+%  S   - trajectory 
+%  s_b - charging station 
+%  s_t - sensing target
+%  s_t_est - estimated positions of sensing target
+%  s_c - communicatoin user
+%  varargin - further parameters
+%
+% OUTPUTS:
+%       the plots and the figure 
+%
+% USAGE: [p_s,p_h, p_b, p_t, p_c, p_t_hat,fig] = plot_map(S, s_b, s_t, s_t_est, s_c, varargin)
+%-----------------------------------------------------------------------
 
-% map 
+function [p_s,p_h, p_b, p_t, p_c, p_t_hat,fig] = plot_map(S, s_b, s_t, s_t_est, s_c, varargin)
     
     params = [];
     if ~isempty(varargin)
@@ -32,7 +44,7 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat,fig] = plot_map(S, s_b, s_t, s_t_est, 
     p_s.MarkerEdgeColor = 'b';
     p_s.MarkerSize      = 2;
 
-    % plot base station 
+    % plot charging station 
     p_b = plot(s_b(1), s_b(2));
     p_b.LineStyle = 'none';
     p_b.Marker = '*';

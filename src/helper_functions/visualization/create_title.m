@@ -1,14 +1,30 @@
+%------------------------------------------------------------------------
+% FUNCTION NAME: create_title
+% AUTHOR: Sharif Azem
+%         Markus Krantzik
+%
+% DESCRIPTION:  creates a title for the trajectory map
+%
+% INPUTS:
+% varargin - contains parameters and axis
+%
+% OUTPUTS:
+%       ttl - the title 
+%
+% USAGE:  ttl = create_title(varargin)
+%-----------------------------------------------------------------------
+
 function ttl = create_title(varargin)
 
 def_ttl = "Default";
-if nargin == 0
+if nargin == 0 % enter here just in case the user does not insert a title 
     ttl = title(def_ttl);
-elseif nargin == 1
+elseif nargin == 1 % enter here just in case the user does not insert a title 
     axs = varargin{1};
     ttl = title(axs , def_ttl);
-elseif nargin == 2
-    axs = varargin{1};
-    prms = varargin{2};
+elseif nargin == 2 % create a title with the given parameters
+    axs = varargin{1}; % axis 
+    prms = varargin{2}; % parameters
 
     eta = prms.sim.eta;
     w_star = prms.sim.w_star;

@@ -27,7 +27,7 @@ alpha_0        = params.sim.alpha_0;
 B              = params.sim.B;
 
 rel_dist       = user_quad_distance(S, s_c, params.sim.H);
-snr_const = (P.*alpha_0)./(sigma_0.^2);
+snr_const      = (P.*alpha_0)./(sigma_0.^2);
 if strcmp(dim,'x')
     rel_pos_x     = (S(1,:) - s_c(1));
     grad_rate_dim = -2*snr_const.*rel_pos_x./( rel_dist.^2.*( rel_dist.^2 + snr_const));
@@ -37,7 +37,4 @@ elseif strcmp(dim,'y')
     grad_rate_dim = -2*snr_const.*rel_pos_y./( rel_dist.^2.*( rel_dist.^2 + snr_const));
     grad_rate_dim = grad_rate_dim.*B./(N * log(2));
 end
-
-
 end
-
