@@ -1,7 +1,7 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: user_quad_distance
-% AUTHOR: Sharif Azem
-%         Markus Krantzik
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
 %
 % DESCRIPTION:  calculates the distance to the communication user
 %

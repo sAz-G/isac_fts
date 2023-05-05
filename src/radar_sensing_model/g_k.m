@@ -1,7 +1,7 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: g_k
-% AUTHOR: Sharif Azem
-%         Markus Krantzik
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
 %
 % DESCRIPTION: The two way channel power gain 
 %

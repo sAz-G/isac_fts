@@ -1,7 +1,7 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: calc_velocity
-% AUTHOR: Sharif Azem
-%         Markus Krantzik
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
 %
 % DESCRIPTION:  calculates the velocity matrix
 %

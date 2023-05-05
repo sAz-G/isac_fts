@@ -1,7 +1,7 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: init_trajectory
-% AUTHOR: Sharif Azem
-%         Markus Krantzik
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
 %
 % DESCRIPTION: calculates the initial trajectory
 %
@@ -30,10 +30,10 @@ V_init  = ones(2,N).*V_str.*(s_end - s_start)./norm(s_end - s_start);
 S_init(:,1:N) = s_start + V_str.*(1:N).*(s_end - s_start)./norm(s_end - s_start)*T_f;
 
 % check if the calculated trajectory is valid. if not, calculate a new one.
+% (does not cover all cases but works fine)
 s_e = S_init(:,end); % get last position at the initial trajectory
 
-
-if (s_e(1) > L_x)&&(s_e(2) > L_y)                                    % x position out of bounds
+if (s_e(1) > L_x)&&(s_e(2) > L_y)                                    %  position out of bounds
     if (abs(s_start(2)-L_y) > abs(s_start(1)-L_x))
         x_new  = L_x;                                                    % calc new x
         s_e(1) = x_new;                             % calc new x

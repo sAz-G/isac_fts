@@ -1,7 +1,7 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: calc_constraint_energy
-% AUTHOR: Sharif Azem
-%         Markus Krantzik
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
 %
 % DESCRIPTION:  calculates the used energy, which is needed for the
 % multi stage problem problem

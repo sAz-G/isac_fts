@@ -1,7 +1,7 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: fisher_mat_entry
-% AUTHOR: Sharif Azem
-%         Markus Krantzik
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
 %
 % DESCRIPTION: calculate the entry of the fisher information
 % matrix

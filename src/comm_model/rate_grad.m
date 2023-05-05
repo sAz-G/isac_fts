@@ -1,7 +1,7 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: rate_grad
-% AUTHOR: Sharif Azem
-%         Markus Krantzik
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
 %
 % DESCRIPTION:  calculates the gradient of the rate of function along a given dimension 
 %

@@ -1,7 +1,7 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: estimate_target
-% AUTHOR: Sharif Azem
-%         Markus Krantzik
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
 %
 % DESCRIPTION: estimate_target provides the estimated position of the target given the
 % hover points. It uses one of the implemented algorithms to caluclate the

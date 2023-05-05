@@ -1,7 +1,7 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: grid_vectors
-% AUTHOR: Sharif Azem
-%         Markus Krantzik
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
 %
 % DESCRIPTION: % create vectors for the grid to use grid search on
 %

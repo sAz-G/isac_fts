@@ -1,7 +1,7 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: avg_data_rate
-% AUTHOR: Sharif Azem
-%         Markus Krantzik
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
 %
 % DESCRIPTION: provides the average data rate for a given trajectory
 %

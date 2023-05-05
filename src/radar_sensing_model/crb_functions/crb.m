@@ -1,7 +1,7 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: crb
-% AUTHOR: Sharif Azem
-%         Markus Krantzik
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
 %
 % DESCRIPTION: calculate the crb of given points and target position 
 %
