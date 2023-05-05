@@ -121,8 +121,15 @@ cvx_begin % cvx entry point
     if strcmp(params.opt_settings.obj, 'abs')
         minimize(abs(eta.*(CRB_taylor)-(1-eta).*R_taylor));
     else
-        minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor./params.sim.B);
+        minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor./(params.sim.B));
     end
+
+% if u>=10
+%         minimize(abs(eta.*(CRB_taylor)-(1-eta).*R_taylor./params.sim.B));
+% else
+%         minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor./params.sim.B);
+% end
+    
     %% constraints
     
     subject to
@@ -178,9 +185,9 @@ else% if the solution is valid (not nan)
     end
     
     if strcmp(params.opt_settings.obj, 'abs')
-            J(u) = abs(eta.*(CRB_taylor)-(1-eta).*R_taylor);
+            J(u) = abs(eta.*(CRB_taylor)-(1-eta).*R_taylor./(params.sim.B));
     else
-            J(u) = eta.*(CRB_taylor)-(1-eta).*R_taylor./params.sim.B;
+            J(u) = eta.*(CRB_taylor)-(1-eta).*R_taylor./(params.sim.B);
     end
         
     R_iter(u)    = R_taylor;

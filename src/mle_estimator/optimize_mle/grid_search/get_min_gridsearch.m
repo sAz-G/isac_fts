@@ -1,4 +1,4 @@
-function [idx, idy] = get_min_gridsearch(D_est,x_t,y_t,x_jt,y_jt,params)
+function [idx, idy,min_val] = get_min_gridsearch(D_est,x_t,y_t,x_jt,y_jt,params)
 % get_min(est, params) is the function, for which we want to find the
 % minimum(objective function (of)).
 % 
@@ -26,7 +26,10 @@ yj_dim = length(y_jt);  % dimension in y direction of the matrices after using m
 [X_t, Y_t] = meshgrid(x_t, y_t);
 X_t        = repmat(X_t, [1,1,xj_dim]);
 Y_t        = repmat(Y_t, [1,1,yj_dim]);
-
+% figure(333)
+% plot(X_t(:),Y_t(:),'.')
+% hold on 
+% title('plot at function gridsearch')
 D_mat_est  = ones(x_dim,y_dim, length(D_est));
 Y_jt       = ones(x_dim,y_dim,yj_dim);
 X_jt       = ones(x_dim,y_dim,xj_dim);
@@ -52,10 +55,10 @@ beta_0         = params.sim.beta_0;
 a              = params.sim.a;
 sigma_0        = params.sim.sigma_0;
 
-factor   = (P*G_p*beta_0)./(2*a*sigma_0.^2);
+factor   = (P*G_p*beta_0)./(a*sigma_0.^2);
 func = sum(log_Pxy + factor*fraction,3);
 
-[~,idx]   = min(func(:));
+[min_val,idx]   = min(func(:));
 [idy,idx] = ind2sub(size(func),idx); 
 
 %plot_mle(func, params);

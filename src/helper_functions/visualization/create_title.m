@@ -1,6 +1,4 @@
 function ttl = create_title(varargin)
-%CREATE_TITLE Summary of this function goes here
-%   Detailed explanation goes here
 
 def_ttl = "Default";
 if nargin == 0
@@ -17,8 +15,9 @@ elseif nargin == 2
     N_stg = prms.sim.N_stg;
     mu = prms.sim.mu;
     iter = prms.sim.iter;
-    str_ttl = "Trajectory: (\eta=" + eta + ")(w_{star}=" + w_star + ")(N_{stg}=" + N_stg + ")(\mu=" + mu+")(" + "iter=" + iter + ")";  
-    ttl = title(axs,str_ttl);
+    str_ttl = "Trajectory: ($\eta=" + eta + ")(w=" + w_star + ")(N_{m}=" + N_stg + ")(\mu=" + mu+")(" + "iter=" + iter + ")$";  
+    ttl = title(axs,str_ttl, 'Interpreter', 'latex');
+    
 end
 
 end

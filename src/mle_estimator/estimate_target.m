@@ -22,6 +22,26 @@ if strcmp(algo,'gridsearch')
     pos = [x_t(x_t_idx);y_t(y_t_idx)];        
 elseif strcmp(algo,'random_gridsearch')
     % not implemmented yet
+    rpts = 10;
+    rng(3);
+    X_t = 1500*rand(rpts,1000);
+    rng(4);
+    Y_t = 1500*rand(rpts,1000);
+
+    s_hover_x = S_hover(1,:);
+    s_hover_y = S_hover(2,:);
+    
+    % get the estimated target matrix index
+    min_prev = 1e12;
+    for z = 1:rpts
+        x_t = X_t(z,:);
+        y_t = Y_t(z,:);
+        [x_t_idx,y_t_idx,min_val]  = get_min(D_meas,x_t,y_t,s_hover_x,s_hover_y,params);
+        if min_val < min_prev
+            min_prev = min_val;
+            pos = [x_t(x_t_idx);y_t(y_t_idx)];
+        end    
+    end
 elseif strcmp(algo,'grad_dec')
     % not implemmented yet
 elseif strcmp(algo,'cvx_app')
