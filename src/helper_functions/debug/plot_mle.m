@@ -1,6 +1,7 @@
 function plot_mle(func, params)
-%PLOT_MLE Summary of this function goes here
-%   Detailed explanation goes here
+%PLOT_MLE Function to plot the MLE
+%   funct == MLE function matrix
+%   params == struct with simulation parameters
 
 figure
 [~,idx] = min(func(:));

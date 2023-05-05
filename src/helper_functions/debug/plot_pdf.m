@@ -1,6 +1,5 @@
 function plot_pdf(X_t, Y_t, X_jt, Y_jt, H_mat, D_mat_est, params)
-%PLOT_MLE Summary of this function goes here
-%   Detailed explanation goes here
+%PLOT_MLE Plot the propability distrubution function
 
 D_xy = sqrt((X_t-X_jt).^2+(Y_t-Y_jt).^2 + H_mat.^2);
 diff_square = (D_mat_est - D_xy).^2;

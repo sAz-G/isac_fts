@@ -1,12 +1,11 @@
 function E_used = calc_constraint_energy(K_stg,V,delta,params)
-% calc_energy calculates the energy, given the previous energy, and the
-% energy used in each stage, which is predefined.
-% Arguments: 
-% E_min is the energy used in each stage excluding the final
-% stage.
-% E_prev is the previous energy state.
-% Returns: 
-% E_new is the new energy state
+% calc_constraint_energy calculates Calculate the energy for a given stage 
+% This function uses the convex energy function, which approximates the
+% energy in the constraints
+%   K_stg == number of hovering points
+%   S == trajectory of the flight
+%   S_s == start point of the trajectory
+%   params == struct with simulation parameters
 
 s     = params.energy.s; 
 A     = params.energy.A;

@@ -1,5 +1,5 @@
 function ttl = create_title(varargin)
-%CREATE_TITLE Summary of this function goes here
+%CREATE_TITLE Function to create a title of the drone
 %   Detailed explanation goes here
 
 def_ttl = "Default";

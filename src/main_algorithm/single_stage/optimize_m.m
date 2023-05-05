@@ -43,7 +43,7 @@ derivatey_rate = compute_gradient_rate_y(S_init, s_c, H, N_stg, params);
 
 cvx_begin
     cvx_solver mosek
-    cvx_precision high
+    cvx_precision low
     
     variable S(2,N_stg)
     variable V(2,N_stg)

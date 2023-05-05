@@ -1,6 +1,12 @@
 function fig_conv = plot_convergence(debug_S, debug_V, debug_delta, debug_xi, S_s, m, params)
-%PLOT_CONVERGENCE Summary of this function goes here
-%   Detailed explanation goes here
+%PLOT_CONVERGENCE Function to plot the convergence of difference simulation
+% parameters
+%   debug_S == Trajectory over the iterations
+%   debug_V == Velocity over the iterations
+%   debug_delta == delta over the iterations
+%   debug_xi == xi over the iterations
+%   m == number of the current stage
+%   params == struct with simulation parameters
 
 fig_conv = figure();
 iter = params.sim.iter;

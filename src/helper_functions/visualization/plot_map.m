@@ -2,10 +2,11 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
 %PLOT_MAP plots the map for a given trajectory and base station, target and
 %communication user position.
 % arguments: 
-% S    - quad trajectory.
-% s_b  - base station position.
-% s_t  - target position. 
-% s_c  - communication user position.
+%   S    - quad trajectory.
+%   s_b  - base station position.
+%   s_t  - target position. 
+%   s_t_est  - estimated target position. 
+%   s_c  - communication user position.
 
 % map 
     
