@@ -1,14 +1,25 @@
-function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c, varargin)
-%PLOT_MAP plots the map for a given trajectory and base station, target and
-%communication user position.
-% arguments: 
-%   S    - quad trajectory.
-%   s_b  - base station position.
-%   s_t  - target position. 
-%   s_t_est  - estimated target position. 
-%   s_c  - communication user position.
+%------------------------------------------------------------------------
+% FUNCTION NAME: plot_map
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
+%
+% DESCRIPTION: creates a trajectory map
+%
+% INPUTS:
+%  S   - trajectory 
+%  s_b - charging station 
+%  s_t - sensing target
+%  s_t_est - estimated positions of sensing target
+%  s_c - communicatoin user
+%  varargin - further parameters
+%
+% OUTPUTS:
+%       the plots and the figure 
+%
+% USAGE: [p_s,p_h, p_b, p_t, p_c, p_t_hat,fig] = plot_map(S, s_b, s_t, s_t_est, s_c, varargin)
+%-----------------------------------------------------------------------
 
-% map 
+function [p_s,p_h, p_b, p_t, p_c, p_t_hat,fig] = plot_map(S, s_b, s_t, s_t_est, s_c, varargin)
     
     params = [];
     if ~isempty(varargin)
@@ -16,6 +27,13 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
     end
     
     fig = figure;
+
+    xlabel("x [m]")
+    ylabel("y [m]")
+
+    xlim([0 1500])
+    ylim([0 1500])
+    
     hold on
     grid on
     
@@ -26,7 +44,7 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
     p_s.MarkerEdgeColor = 'b';
     p_s.MarkerSize      = 2;
 
-    % plot base station 
+    % plot charging station 
     p_b = plot(s_b(1), s_b(2));
     p_b.LineStyle = 'none';
     p_b.Marker = '*';
@@ -41,8 +59,8 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
     p_t.MarkerEdgeColor = 'r';
     
     % plot estimated target position 
-    p_t_hat = plot(s_t_est(1), s_t_est(2));
-    p_t_hat.LineStyle = 'none';
+    p_t_hat = plot(s_t_est(1,:), s_t_est(2,:));
+    p_t_hat.LineStyle = '-';
     p_t_hat.LineWidth = 1.1;
     p_t_hat.Marker = 'diamond';
     p_t_hat.MarkerSize = 10;
@@ -60,6 +78,9 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
     l = legend();
     l.Location = 'southeast';
     
+    set(gca,'xtick',[0:250:1500])
+    set(gca,'ytick',[0:250:1500])
+
     if isempty(params)
          l.String = {'S','s_b', 's_t','s_{est}', 's_c'};         
         create_title(gca);
@@ -77,6 +98,7 @@ function [p_s,p_h, p_b, p_t, p_c, p_t_hat] = plot_map(S, s_b, s_t, s_t_est, s_c,
         l.String = {'S','s_b','s_t', 's_{est}','s_c', 'S_h'};
         create_title(gca, params);
     end
+    
     
 end
 
