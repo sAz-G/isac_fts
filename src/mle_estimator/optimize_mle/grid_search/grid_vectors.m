@@ -1,25 +1,26 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: grid_vectors
-% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
-%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
+% AUTHORS: Sharif Azem (sAz-G on GitHub), Markus Krantzik (mardank on GitHub)
 %
-% DESCRIPTION: % create vectors for the grid to use grid search on
+% DESCRIPTION: 
+%   Create vectors for the grid to use grid search on.
 %
 % INPUTS:
-%   L_x - the limit in x direction.
-%   L_y - the limit in y direction.
-%   r_x - amount of grid points.
+%   L_x - The limit in x direction.
+%   L_y - The limit in y direction.
+%   r_x - Amount of grid points in x direction.
+%   r_y - Amount of grid points in y direction.
 %
 % OUTPUTS:
-%   x_t - the output vector for the x direction
-%   y_t - the output vector for the y direction
+%   x_t - The output vector for the x direction.
+%   y_t - The output vector for the y direction.
 %
-% USAGE:  [x_t,y_t] = grid_vectors(Lx,Ly,rx,ry)
+% USAGE: 
+%   [x_t, y_t] = grid_vectors(Lx, Ly, rx, ry)
 %
 %------------------------------------------------------------------------
 
-function [x_t,y_t] = grid_vectors(Lx,Ly,rx,ry)
-x_t = linspace(0,Lx,rx);
-y_t = linspace(0,Ly,ry);
+function [x_t, y_t] = grid_vectors(Lx, Ly, rx, ry)
+    x_t = linspace(0, Lx, rx);
+    y_t = linspace(0, Ly, ry);
 end
-
