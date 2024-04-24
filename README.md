@@ -16,6 +16,3 @@ To run the code, you will need to install the `cvx` toolbox.
 3. **Monte Carlo Simulations**:
    - If you want to run Monte Carlo simulations, navigate to `src/main_algorithm/monte_carlo/`.
 
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
