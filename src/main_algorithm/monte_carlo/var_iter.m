@@ -1,103 +1,91 @@
 %------------------------------------------------------------------------
 % SCRIPT: var_iter
-% AUTHORS: Sharif Azem (sAz-G on GitHub), Markus Krantzik (mardank on GitHub)
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
 %
-% DESCRIPTION:
-%   This script performs Monte Carlo simulations to analyze the impact of varying the number of iterations
-%   on performance metrics such as the Cramer-Rao Bound (CRB), Mean Squared Error (MSE), and average rate.
+% DESCRIPTION: perform monte_carlo sims on iteration values
 %
 % INPUTS:
-%   - External script: call_hyperParam.m (Loads simulation parameters)
+% calls parameters script
 %
 % OUTPUTS:
-%   - Workspace variables saved in a .mat file
-%   - Plots saved as .eps and .png files
-%
-% USAGE:
-%   Execute the script to perform Monte Carlo simulations and generate plots.
+% saves workspace and plots
+% USAGE: run script
 %------------------------------------------------------------------------
-
 %%
-clear;              % Clear workspace
-clc;                % Clear command window
-close all;          % Close all figures
+clear;
+clc;
+close all;
 
-% Add appropriate paths based on the operating system
 if ispc
     addpath(genpath("..\..\..\src"));
 elseif isunix
     addpath(genpath("../../../src"));
 end 
 
-%% Simulation Parameters 
+%% Simulation parameter
 
-% Load simulation parameters from an external script
-run("call_hyperParam.m")
+% load the simulation parameters 
+run("call_parameters.m")
 
-number_mc_iterations = 35;  % Number of Monte Carlo iterations
-L_x = params.sim.L_x;       % Length of the simulation area along the x-axis
-L_y = params.sim.L_y;       % Length of the simulation area along the y-axis
+number_mc_iterations = 5;
+L_x = params.sim.L_x;
+L_y = params.sim.L_y;
 
-% Define a vector of iteration values to explore
 iter_vec        = 0:5:30;
 iter_vec(1)     = 1;
-
-% Preallocate arrays to store results
 CRB_over_iter   = zeros(1,length(iter_vec));
 Rate_over_iter  = zeros(1,length(iter_vec));
 MSE             = zeros(1,length(iter_vec));
 
-counter = 1;  % Counter for iteration
+counter = 1;
 
-% Generate random positions for communication users, sensing targets, and estimated sensing targets
+% generate positions
 start_bound = 0;
-setup.comm_user_pos    = [start_bound+ (L_x-start_bound)*rand(1,number_mc_iterations) ; start_bound + (L_y-start_bound)*rand(1,number_mc_iterations) ];
-setup.sense_target_pos = [start_bound+ (L_x-start_bound)*rand(1,number_mc_iterations) ; start_bound + (L_y-start_bound)*rand(1,number_mc_iterations) ];
-setup.est_sense_target = [ (L_x)*rand(1,number_mc_iterations); (L_y)*rand(1,number_mc_iterations) ];
+setup.comm_user_pos    = [start_bound+ (params.sim.L_x-start_bound)*rand(1,number_mc_iterations) ; start_bound + (params.sim.L_y-start_bound)*rand(1,number_mc_iterations) ];
+setup.sense_target_pos = [start_bound+ (params.sim.L_x-start_bound)*rand(1,number_mc_iterations) ; start_bound + (params.sim.L_y-start_bound)*rand(1,number_mc_iterations) ];
+setup.est_sense_target = [ (params.sim.L_x)*rand(1,number_mc_iterations); (params.sim.L_y)*rand(1,number_mc_iterations) ];
 
-%% Variation of the Iterations
+%% Variation of the iterations
 for cur_iter = iter_vec
     fprintf('Variation : n = %.f/%.f, Iterations: %.f\n', counter, length(iter_vec), cur_iter);
-
-    % Set the number of iterations in the simulation parameters
+    % set the nmber of iterations
     params.sim.iter = cur_iter;
 
-    % Perform Monte Carlo simulation for the current setup
+    % call the monte_carlo function to to the monte-carlo-simulation of the current setup
     res_mc = monte_carlo(params, setup, number_mc_iterations);
     
-    % Calculate and store the average CRB, MSE, and rate
-    CRB_over_iter(counter) = mean(res_mc.CRB_avg);
-    MSE(counter)           = mean(res_mc.MSE_avg);
-    Rate_over_iter(counter)= mean(res_mc.Rate_avg);
-    
-    counter = counter + 1;  % Increment counter
+    % save the avg. CRB
+    CRB_over_iter(counter) =   mean(res_mc.CRB_avg);
+    MSE(counter)             = mean(res_mc.MSE_avg);
+
+    % save the avg. Rate
+    Rate_over_iter(counter) = mean(res_mc.Rate_avg);
+    counter = counter + 1;
 end
 
 %% Evaluate and plot the parameters
 out_path = create_output_path(fullfile('monte_carlo_variations','var_iter'));
 
-% Plot CRB against number of iterations
 figure
-title("MC-Simulation over iterations")
-plot(iter_vec, CRB_over_iter)
+title("MC-Simulation over iter")
+plot(iter_vec, (CRB_over_iter))
 grid on
-xlabel("Iterations")
+xlabel("iter")
 ylabel("CRB")
 
-% Save the plot
 saveas(gcf, fullfile(out_path, 'MC_CRB_MSE_over_iter'), 'epsc');
 saveas(gcf, fullfile(out_path, 'MC_CRB_MSE_over_iter'), 'png');
 
-% Plot average rate against number of iterations
 figure 
 plot(iter_vec, Rate_over_iter)
-xlabel("Iterations")
-ylabel("Avg. Rate")
+xlabel("iter")
+ylabel("avg. Rate")
 grid on
 
-% Save the plot
+% save the figure
 saveas(gcf, fullfile(out_path, 'MC_Rate_over_iter'), 'epsc');
 saveas(gcf, fullfile(out_path, 'MC_Rate_over_iter'), 'png');
 
-% Save workspace variables
+% Safe the workspace
 save(fullfile(out_path, 'mc_var_iter.mat'));
