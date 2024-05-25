@@ -24,18 +24,18 @@
 %   S_opt     - optimal trajectory of stage m
 %   V_opt     - Velocity matrix
 %   xi_opt    - opt. variable xi
-%   delta_opt - opt. variable delta
+%   dlta_opt - opt. variable dlta
 %   CRB_opt   - opt. crb used in the objective function J
 %   R_opt     - opt. rate function used in the objective function J
 %   CRB_iter  - value of CRB_opt at each iteration
 %   R_iter    - value of R_opt at each iteration  
 %   J         - objective function 
 %
-% USAGE: [S_opt, V_opt, xi_opt, delta_opt, CRB_opt, R_opt, CRB_iter, R_iter , J] = optimize_m(E_m, s_c, S_hover, S_total,s_t,s_s, params)
+% USAGE: [S_opt, V_opt, xi_opt, dlta_opt, CRB_opt, R_opt, CRB_iter, R_iter , J] = optimize_m(E_m, s_c, S_hover, S_total,s_t,s_s, params)
 %
 %-----------------------------------------------------------------------
 
-function [S_opt, V_opt, xi_opt, delta_opt, CRB_opt, R_opt, CRB_iter, R_iter , J] = optimize_m(E_m, s_c, S_hover, S_total,s_t,s_s, params)
+function [S_opt, V_opt, xi_opt, dlta_opt, CRB_opt, R_opt, CRB_iter, R_iter , J] = optimize_m(E_m, s_c, S_hover, S_total,s_t,s_s, params)
 
 % constants 
 L_x   = params.sim.L_x;     % boundary in the x direction 
@@ -57,7 +57,7 @@ S_init = S_total(:,end-N_stg+1:end);
 V_init = nan(size(S_init));
 V_init(:,1)       = (S_init(:,1)-s_s)./params.sim.T_f;
 V_init(:,2:end)   = (S_init(:,2:end)-S_init(:,1:end-1))./params.sim.T_f;
-delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
+dlta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
                         - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
 S_init_valid = S_init;
 S_valid      = S_init*1.1; % initial value for the valid solution. used only in case of nan in the first iteration  
@@ -114,7 +114,7 @@ cvx_begin % cvx entry point
     % optimization variables
     variable S(2,N_stg)     % trajectory 
     variable V(2,N_stg)     % velocity
-    variable delta(1,N_stg) % delta (see paper)
+    variable dlta(1,N_stg) % dlta (see paper)
     variable xi(1,N_stg)    % xi (see paper)
     
     % first degree taylor series expansion of crb in x direction 
@@ -138,11 +138,11 @@ cvx_begin % cvx entry point
     
     % constraints    
     subject to
-        E_m     >= calc_constraint_energy(V,delta, params); % energy constraint
+        E_m     >= calc_constraint_energy(V,dlta, params); % energy constraint
         (S(:,1) - s_s)./params.sim.T_f == V(:,1); % definition of the velocity
         (S(:,2:end) - S(:,1:end-1))./params.sim.T_f == V(:,2:end); % definition of the velocity
         V_max   >= norms(V, 2, 1);    % velocity constraint
-        delta   >= 0;                 % delta is not negative 
+        dlta   >= 0;                 % dlta is not negative 
         xi      >= 0;                 % xi is not negative
         S(1,:)  >= 0;                 % all x points are not negative                                                      
         S(2,:)  >= 0;                 % all y points are not negative
@@ -150,8 +150,8 @@ cvx_begin % cvx entry point
         L_y     >= S(2,:);            % all y points are bounded by L_y
         
         for i = 1:N_stg % add constraints 51a and 51b from the paper
-           (norm(V_init(:, i))./v_0).^2 + (2./v_0.^2).*V_init(:, i).'*(V(:,i)-V_init(:,i)) >= pow_pos(inv_pos(delta(i)), 2)-xi(i);
-           delta_square_init(i) + 2.*sqrt(delta_square_init(i)).*(delta(i) - sqrt(delta_square_init(i))) >=  xi(i);
+           (norm(V_init(:, i))./v_0).^2 + (2./v_0.^2).*V_init(:, i).'*(V(:,i)-V_init(:,i)) >= pow_pos(inv_pos(dlta(i)), 2)-xi(i);
+           dlta_square_init(i) + 2.*sqrt(dlta_square_init(i)).*(dlta(i) - sqrt(dlta_square_init(i))) >=  xi(i);
         end
 cvx_end % end of cvx calculations 
 
@@ -167,7 +167,7 @@ if isnan(cvx_optval) %|| isinf(cvx_optval)% handle nan solutions, set new starti
 
         V_init(:,1)       = (S_init(:,1)-s_s)./params.sim.T_f;
         V_init(:,2:end)   = (S_init(:,2:end)-S_init(:,1:end-1))./params.sim.T_f;
-        delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
+        dlta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
                                 - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
     else % if nan solution and last iteration, assign last valid solutions
         break; % stop optimizing if reached last iteration
@@ -180,7 +180,7 @@ else% if the solution is valid (not nan)
         S_valid         = S;
         S_init_valid    = S_init; 
         V_valid         = V;
-        delta_opt_valid = delta;
+        dlta_opt_valid = dlta;
         xi_valid        = xi;
         R_opt_valid     = R_taylor;
         CRB_opt_valid   = CRB_taylor;
@@ -195,7 +195,7 @@ else% if the solution is valid (not nan)
         S_init            = S_init + w_star.*(S-S_init);
         V_init(:,1)       = (S_init(:,1)-s_s)./params.sim.T_f;
         V_init(:,2:end)   = (S_init(:,2:end)-S_init(:,1:end-1))./params.sim.T_f;
-        delta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
+        dlta_square_init = sqrt(1 + norms(V_init, 2, 1).^4/(4*params.energy.v_0^4))...
                                 - norms(V_init, 2 ,1).^2/(2*params.energy.v_0^2);
     else
         break; % stop optimizing
@@ -207,7 +207,7 @@ end % end of for loop and optimization
 
 S_opt       = S_valid;              % store trajectory results of each iteration 
 V_opt       = V_valid;              % store velocity results of each iteration 
-delta_opt   = delta_opt_valid;      % store detla results of each iteration 
+dlta_opt   = dlta_opt_valid;      % store detla results of each iteration 
 xi_opt      = xi_valid;             % store xi results of each iteration 
 R_opt       = R_opt_valid;          % store rate results of each iteration 
 CRB_opt     = CRB_opt_valid;        % store crb results  of each iteration 

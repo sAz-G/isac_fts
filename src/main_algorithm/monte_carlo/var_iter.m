@@ -26,9 +26,9 @@ end
 %% Simulation parameter
 
 % load the simulation parameters 
-run("call_hyperParam.m")
+run("call_parameters.m")
 
-number_mc_iterations = 35;
+number_mc_iterations = 5;
 L_x = params.sim.L_x;
 L_y = params.sim.L_y;
 
