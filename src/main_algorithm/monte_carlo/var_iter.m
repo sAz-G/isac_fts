@@ -28,11 +28,11 @@ end
 % load the simulation parameters 
 run("call_parameters.m")
 
-number_mc_iterations = 5;
+number_mc_iterations = 2;
 L_x = params.sim.L_x;
 L_y = params.sim.L_y;
 
-iter_vec        = 0:5:30;
+iter_vec        = 0:5:10;
 iter_vec(1)     = 1;
 CRB_over_iter   = zeros(1,length(iter_vec));
 Rate_over_iter  = zeros(1,length(iter_vec));

@@ -1,24 +1,30 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: sigma_k
-% AUTHORS: Sharif Azem (sAz-G on GitHub), Markus Krantzik (mardank on GitHub)
+% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
+%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
 %
-% DESCRIPTION: 
-%   Estimate the distance to the target based on the sensing model.
+% DESCRIPTION: Calculate the std of the distance measurement
 %
 % INPUTS:
-%   s_t - Sensing target position.
-%   s_q - Hovering positions of the drone.
-%   params - Constant parameters.
+%   d_s     - distance to the sensing target
+%   params  - sensing parameters
 %
 % OUTPUTS:
-%   d_hat - Estimated distance to the target.
+%   sig_k - standard deviation of the measurement 
 %
-% USAGE:   
-%   d_hat = sense_target(s_t, S_q, params);
+% USAGE:  sig_k = sigma_k(d_s,params)
 %
 %------------------------------------------------------------------------
 
-function d_hat = sense_target(s_t, S_q, params)
-    d_s = norms([s_t - S_q; ones(1, size(S_q, 2)) * params.sim.H], 2);
-    d_hat = d_s + sigma_k(d_s, params) .* randn(1, length(d_s));
+function sig_k = sigma_k(d_s,params)
+    
+    % sensing parameters 
+    P              = params.sim.P;
+    G_p            = params.sim.G_p;
+    beta_0         = params.sim.beta_0;
+    a              = params.sim.a;
+    sigma_0        = params.sim.sigma_0;
+    
+    % standard deviation 
+    sig_k = sqrt( (a.*sigma_0.^2)./( P.*G_p.*g_k(d_s, beta_0) ) );
 end
