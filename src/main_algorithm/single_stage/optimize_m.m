@@ -119,16 +119,10 @@ cvx_begin % cvx entry point
     %% Objective function
     % minimization
     if strcmp(params.opt_settings.obj, 'abs')
-        minimize(abs(eta.*(CRB_taylor)-(1-eta).*R_taylor));
+        minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor);
     else
         minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor./(params.sim.B));
     end
-
-% if u>=10
-%         minimize(abs(eta.*(CRB_taylor)-(1-eta).*R_taylor./params.sim.B));
-% else
-%         minimize(eta.*(CRB_taylor)-(1-eta).*R_taylor./params.sim.B);
-% end
     
     %% constraints
     
@@ -212,9 +206,7 @@ V_opt       = V_valid;              % store velocity results of each iteration
 delta_opt   = delta_opt_valid;      % store detla results of each iteration 
 xi_opt      = xi_valid;             % store xi results of each iteration 
 R_opt       = R_opt_valid;          % store rate results of each iteration 
-%R_iter      = R_iter;%(~isnan(R_iter));
 CRB_opt     = CRB_opt_valid;        % store crb results  of each iteration 
-%CRB_iter    = CRB_iter;%(~isnan(CRB_iter));
-%J           = J;%(~isnan(J));
+
 end
 
