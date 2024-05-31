@@ -1,7 +1,7 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: multi_stage
-% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
-%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
+% AUTHOR: Sharif Azem     (sAz-G on github), Markus Krantzik (mardank on github)
+%         
 %
 % DESCRIPTION:  
 %               passed the parameters that are needed, which include the simulation

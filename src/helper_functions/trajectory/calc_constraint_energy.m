@@ -1,7 +1,7 @@
 %------------------------------------------------------------------------
 % FUNCTION NAME: calc_constraint_energy
-% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
-%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
+% AUTHOR: Sharif Azem (sAz-G on github), Markus Krantzik (mardank on github)
+%
 %
 % DESCRIPTION:  calculates the constraint energy, which is needed for the
 % optimization problem

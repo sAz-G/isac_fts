@@ -1,15 +1,12 @@
 %------------------------------------------------------------------------
-% SCRIPT: parameters
-% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
-%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
+% SCRIPT NAME: parameters
+% AUTHORS: Sharif Azem (sAz-G on GitHub), Markus Krantzik (mardank on GitHub)
 %
-% USAGE:  define parameters here before running the algorithm in.
-%         to run the aalgorithm, you have to run the script
-%         multi_stage_script. To run monte carlo simulations, go to the
-%         folder src/main_algorithm/monte_carlo and run one of the var_*
-%         files provided.
+% DESCRIPTION: 
+%   a script to set predefined parameters
 %
 %------------------------------------------------------------------------
+
 
 % predefined parameters for the algorithm
 clear 

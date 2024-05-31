@@ -1,7 +1,6 @@
 %------------------------------------------------------------------------
 % SCRIPT: var_iter
-% AUTHOR: Sharif Azem     (TU-Darmstadt department 18, sAz-G on github)
-%         Markus Krantzik (TU-Darmstadt department 18, mardank on github)
+% AUTHOR: Sharif Azem (sAz-G on github), Markus Krantzik (mardank on github)
 %
 % DESCRIPTION: perform monte_carlo sims on iteration values
 %
