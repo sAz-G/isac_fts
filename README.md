@@ -1,10 +1,10 @@
-# An implementation of "ISAC from the Sky: UAV Trajectory Design for Joint Communication and Target Localization" 
+# Implementation of an optimization algorithm for Integrated Sensing and Communication (ISAC)  
 
-This repository contains the implementation of "ISAC from the Sky: UAV Trajectory Design for Joint Communication and Target Localization".
+This repository contains a custom implementation of **_"ISAC from the Sky: UAV Trajectory Design for Joint Communication and Target Localization"_**. The implementation in this repository is based on [this paper](https://arxiv.org/abs/2207.02904). This repository is independent of the original paper.
 
 ## Installation
 
-To run the code, you will need to install the `cvx` toolbox.
+To run the code, you will need to install the [cvx](https://cvxr.com/cvx/) toolbox.
 
 ## Running the Code
 
